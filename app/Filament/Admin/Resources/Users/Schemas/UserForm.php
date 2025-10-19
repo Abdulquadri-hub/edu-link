@@ -24,6 +24,10 @@ class UserForm
                     TextInput::make('last_name')
                         ->required()
                         ->maxLength(255),
+                    TextInput::make('username')
+                        ->required()
+                        ->unique(ignoreRecord: true)
+                        ->maxLength(255),
                     TextInput::make('email')   
                         ->email()
                         ->autocomplete(true)

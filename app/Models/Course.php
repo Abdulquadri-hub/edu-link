@@ -27,7 +27,7 @@ class Course extends Model
     // relationships
 
     public function instructors(): BelongsToMany {
-        return $this->belongsToMany(Instructor::class, "instructor_course")->withPivot(['assigned_date', 'is_primary_instructor'])->withTimestamps();
+        return $this->belongsToMany(Instructor::class, "instructor_course", "course_id", "instructor_id")->withPivot(['assigned_date', 'is_primary_instructor'])->withTimestamps();
     }
 
     public function primaryInstructor(): BelongsToMany {

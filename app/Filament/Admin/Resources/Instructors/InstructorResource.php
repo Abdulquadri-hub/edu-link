@@ -42,7 +42,9 @@ class InstructorResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\CoursesRelationManager::class,
+            RelationManagers\AssignmentsRelationManager::class,
+            RelationManagers\ClassSessionsRelationManager::class
         ];
     }
 

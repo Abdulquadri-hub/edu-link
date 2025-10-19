@@ -3,12 +3,15 @@
 namespace App\Filament\Admin\Resources\Students\Schemas;
 
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\DateTimePicker;
 
 class StudentForm
 {
@@ -19,16 +22,71 @@ class StudentForm
                 Section::make('Student Information')
                     ->schema([
                         Select::make('user_id')
-                            ->relationship('user', 'email')
+                            ->relationship('user', 'email',
+                               fn ($query) => $query->where('user_type', 'student')
+                            )
                             ->required()
                             ->searchable()
                             ->preload()
                             ->createOptionForm([
-                                TextInput::make('first_name')->required(),
-                                TextInput::make('last_name')->required(),
-                                TextInput::make('email')->email()->required(),
-                                TextInput::make('username')->required(),
-                                TextInput::make('password')->password()->required(),
+                                Section::make("Personal Information")->schema([
+                                    TextInput::make('first_name')
+                                        ->required()
+                                        ->maxLength(255),
+                                    TextInput::make('last_name')
+                                        ->required()
+                                        ->maxLength(255),
+                                    TextInput::make('username')
+                                        ->required()
+                                        ->unique(ignoreRecord: true)
+                                        ->maxLength(255),
+                                    TextInput::make('email')   
+                                        ->email()
+                                        ->autocomplete(true)
+                                        ->required()
+                                        ->unique(ignoreRecord: true)
+                                        ->maxLength(255),
+                                    TextInput::make('phone')
+                                       ->tel()
+                                       ->maxLength(255),
+                                    FileUpload::make('avatar')->image()->directory('avatars')->imageEditor(true),
+                                ])
+                                ->columns(2),
+                
+                                Section::make("Account Settings")->schema([
+                                    Select::make('user_type')->options([
+                                        'admin' => 'Admin',
+                                        'instructor' => 'Instructor',
+                                        'student' => 'Student',
+                                        'parent' => 'Parent'
+                                    ])
+                                    ->required()
+                                    ->native(false)
+                                    ->searchable(),
+                
+                                    Select::make('status')->options([
+                                        'active' => 'Active',
+                                        'inactive' => 'Inactive',
+                                        'suspended' => 'Suspended'
+                                    ])
+                                    ->required()
+                                    ->native(false)
+                                    ->default('active')
+                                    ->searchable(),
+                
+                                    TextInput::make('password')
+                                       ->password()
+                                       ->dehydrateStateUsing(
+                                            fn ($state) => Hash::make($state)
+                                        )
+                                        ->dehydrated(fn ($state) => filled($state))
+                                        ->required(fn (string $context) : bool => $context === 'create')
+                                        ->maxLength(255),
+                
+                                    DateTimePicker::make('email_verified_at')
+                                        ->native(false),
+                                ])
+                                ->columns(2),
                             ]),
                         TextInput::make('student_id')
                             ->required()
