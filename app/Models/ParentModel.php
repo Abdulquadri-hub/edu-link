@@ -34,7 +34,7 @@ class ParentModel extends Model
     }
 
     public function children(): BelongsToMany {
-        return $this->belongsToMany(Student::class, "student_parent", "parent_id", "student_id")->withPivot(["relationship", "is_primary_contact", "can_view_grades", "can_view_attendances"])->withTimestamps();
+        return $this->belongsToMany(Student::class, "student_parent", "parent_id", "student_id")->withPivot(["relationship", "is_primary_contact", "can_view_grades", "can_view_attendance"])->withTimestamps();
     }
 
     public function primaryChildren(): BelongsToMany {

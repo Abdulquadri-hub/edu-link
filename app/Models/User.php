@@ -49,7 +49,13 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        $panelId = $panel->getId();
+
+        if($this->user_type === "admin") {
+            return true;
+        }
+
+        return $this->user_type === $panelId;
     }
 
     public function student(): HasOne {
@@ -79,6 +85,10 @@ class User extends Authenticatable implements FilamentUser
     }
 
     public function getFullNameAttribute(): string {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function getNameAttribute(): string {
         return "{$this->first_name} {$this->last_name}";
     }
 

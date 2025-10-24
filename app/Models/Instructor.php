@@ -40,6 +40,10 @@ class Instructor extends Model
         return $this->courses()->wherePivot('is_primary_instructor', true);
     }
 
+    public function assignments():HasMany {
+        return $this->hasMany(Assignment::class);
+    }
+
     public function classSessions(): HasMany {
         return $this->hasMany(classSession::class);
     }

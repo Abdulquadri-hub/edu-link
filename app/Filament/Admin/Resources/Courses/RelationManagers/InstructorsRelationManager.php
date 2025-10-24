@@ -26,76 +26,76 @@ class InstructorsRelationManager extends RelationManager
 {
     protected static string $relationship = 'instructors';
 
-    public function form(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
-                Section::make('Assign Instructor')
-                    ->schema([
-                        Select::make('user_id')
-                            ->relationship('user', 'email', 
-                               fn ($query) => $query->where('user_type', 'instructor')
-                            )
-                            ->required()
-                            ->searchable()
-                            ->preload(),
-                        TextInput::make('instructor_id')
-                            ->required()
-                            ->unique(ignoreRecord: true)
-                            ->default(fn () => 'INS' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT))
-                            ->maxLength(255),
-                        TextInput::make('qualification')
-                            ->maxLength(255),
-                        Textarea::make('specialization')
-                            ->rows(2),
-                        TextInput::make('years_of_experience')
-                            ->numeric()
-                            ->default(0)
-                            ->minValue(0),
-                        TextInput::make('linkedin_url')
-                            ->url()
-                            ->maxLength(255),
-                    ])
-                    ->columns(2),
+    // public function form(Schema $schema): Schema
+    // {
+    //     return $schema
+    //         ->components([
+    //             Section::make('Assign Instructor')
+    //                 ->schema([
+    //                     Select::make('user_id')
+    //                         ->relationship('user', 'email', 
+    //                            fn ($query) => $query->where('user_type', 'instructor')
+    //                         )
+    //                         ->required()
+    //                         ->searchable()
+    //                         ->preload(),
+    //                     TextInput::make('instructor_id')
+    //                         ->required()
+    //                         ->unique(ignoreRecord: true)
+    //                         ->default(fn () => 'INS' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT))
+    //                         ->maxLength(255),
+    //                     TextInput::make('qualification')
+    //                         ->maxLength(255),
+    //                     Textarea::make('specialization')
+    //                         ->rows(2),
+    //                     TextInput::make('years_of_experience')
+    //                         ->numeric()
+    //                         ->default(0)
+    //                         ->minValue(0),
+    //                     TextInput::make('linkedin_url')
+    //                         ->url()
+    //                         ->maxLength(255),
+    //                 ])
+    //                 ->columns(2),
 
-                Section::make('Employment Details')
-                    ->schema([
-                        Select::make('employment_type')
-                            ->options([
-                                'full-time' => 'Full Time',
-                                'part-time' => 'Part Time',
-                                'contract' => 'Contract',
-                            ])
-                            ->required()
-                            ->native(false)
-                            ->default('full-time'),
-                        Select::make('status')
-                            ->options([
-                                'active' => 'Active',
-                                'inactive' => 'Inactive',
-                                'on-leave' => 'On Leave',
-                            ])
-                            ->required()
-                            ->native(false)
-                            ->default('active'),
-                        TextInput::make('hourly_rate')
-                            ->numeric()
-                            ->prefix('₦')
-                            ->step(0.01),
-                        DatePicker::make('hire_date')
-                            ->required()
-                            ->native(false)
-                            ->default(now()),
-                    ])
-                    ->columns(2),
+    //             Section::make('Employment Details')
+    //                 ->schema([
+    //                     Select::make('employment_type')
+    //                         ->options([
+    //                             'full-time' => 'Full Time',
+    //                             'part-time' => 'Part Time',
+    //                             'contract' => 'Contract',
+    //                         ])
+    //                         ->required()
+    //                         ->native(false)
+    //                         ->default('full-time'),
+    //                     Select::make('status')
+    //                         ->options([
+    //                             'active' => 'Active',
+    //                             'inactive' => 'Inactive',
+    //                             'on-leave' => 'On Leave',
+    //                         ])
+    //                         ->required()
+    //                         ->native(false)
+    //                         ->default('active'),
+    //                     TextInput::make('hourly_rate')
+    //                         ->numeric()
+    //                         ->prefix('₦')
+    //                         ->step(0.01),
+    //                     DatePicker::make('hire_date')
+    //                         ->required()
+    //                         ->native(false)
+    //                         ->default(now()),
+    //                 ])
+    //                 ->columns(2),
 
-                Section::make('Biography')
-                    ->schema([
-                        RichEditor::make('bio')
-                            ->columnSpanFull(),
-                ]),
-            ]);
-    }
+    //             Section::make('Biography')
+    //                 ->schema([
+    //                     RichEditor::make('bio')
+    //                         ->columnSpanFull(),
+    //             ]),
+    //         ]);
+    // }
 
     public function table(Table $table): Table
     {
@@ -132,11 +132,11 @@ class InstructorsRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                CreateAction::make(),
-                AttachAction::make(),
+                // AttachAction::make()
+                //   ->preloadRecordSelect(),
             ])
             ->recordActions([
-                EditAction::make(),
+                // EditAction::make(),
                 DetachAction::make(),
                 DeleteAction::make(),
             ])

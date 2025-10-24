@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Submission extends Model
 {
@@ -45,6 +48,10 @@ class Submission extends Model
         return $this->belongsTo(Course::class);
     }
 
+    public function grade(): HasOne {
+        return $this->hasOne(Grade::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
@@ -53,5 +60,37 @@ class Submission extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
+    }
+
+      // Helper Methods
+    public function updateProgress(): void
+    {
+        $totalAssignments = $this->course->assignments()->where('status', 'published')->count();
+        
+        if ($totalAssignments === 0) {
+            $this->update(['progress_percentage' => 0]);
+            return;
+        }
+
+        $completedAssignments = Submission::where('student_id', $this->student_id)
+            ->whereHas('assignment', function ($query) {
+                $query->where('course_id', $this->course_id)
+                      ->where('status', 'published');
+            })
+            ->where('status', 'graded')
+            ->count();
+
+        $progress = round(($completedAssignments / $totalAssignments) * 100, 2);
+        $this->update(['progress_percentage' => $progress]);
+    }
+
+    public function markCompleted(float $finalGrade): void
+    {
+        $this->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+            'final_grade' => $finalGrade,
+            'progress_percentage' => 100,
+        ]);
     }
 }

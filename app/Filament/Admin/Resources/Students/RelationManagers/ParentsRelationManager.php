@@ -29,56 +29,6 @@ class ParentsRelationManager extends RelationManager
     protected static ?string $recordTitleAttribute = 'parent_id';
     protected static ?string $inverseRelationship = 'children';
 
-    public function form(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
-                Section::make('Link Parent')
-                    ->schema([
-                        Select::make('parent_id')
-                            ->label('Parent')
-                            ->required()
-                            ->searchable()
-                            ->getSearchResultsUsing(fn (string $search) => 
-                                ParentModel::whereHas('user', fn ($q) =>
-                                    $q->where('user_type', 'parent')->where('first_name', 'like', "%{$search}%")
-                                )
-                                ->limit(50)
-                                ->get()
-                                ->mapWithKeys(fn ($parent) => [$parent->id => $parent->user->full_name])
-                            )
-                            ->getOptionLabelUsing(fn ($value) => 
-                                ParentModel::find($value)?->user?->full_name
-                            )
-                            ->preload(),
-                        
-                        Select::make('relationship')
-                            ->options([
-                                'father' => 'Father',
-                                'mother' => 'Mother',
-                                'guardian' => 'Guardian',
-                                'other' => 'Other',
-                            ])
-                            ->required()
-                            ->native(false)
-                            ->default('guardian'),
-                        
-                        Toggle::make('is_primary_contact')
-                            ->label('Primary Contact')
-                            ->inline(false),
-                        
-                        Toggle::make('can_view_grades')
-                            ->default(true)
-                            ->inline(false),
-                        
-                        Toggle::make('can_view_attendance')
-                            ->default(true)
-                            ->inline(false),
-                    ])
-                    ->columns(2),
-            ]);
-    }
-
     public function table(Table $table): Table
     {
         return $table
@@ -120,18 +70,66 @@ class ParentsRelationManager extends RelationManager
                     ]),
             ])
             ->headerActions([
-                // CreateAction::make()->label('Link Parent'),
-                AttachAction::make(),
+                AttachAction::make()
+                   ->Label('Link Parent')
+                   ->color('success')
+                   ->icon("heroicon-o-link")
+                   ->recordSelect(
+                      fn (Select $select) => $select
+                        ->placeholder('Enter parent first/last name')
+                        ->searchable()
+                        ->getSearchResultsUsing( fn  (string $search) => 
+                            ParentModel::whereHas('user', fn ($q) => 
+                                $q->where('user_type', 'parent')
+                                    ->where(function ($query) use ($search) {
+                                     $query->where('first_name', 'like', "%$search%")
+                                        ->orWhere('last_name', 'like', "%$search%");
+                                    })      
+                            )
+                            ->limit(10)
+                            ->get()
+                            ->mapWithKeys( fn ($parent) => [
+                                $parent->id => "{$parent->user?->full_name}"
+                            ])
+                        )
+                        ->getOptionLabelUsing( fn ($value) =>
+                            ParentModel::find($value)->user?->full_name ?? 'unknown parent'
+                        )
+                   )
+                   ->schema(fn (AttachAction $action): array => [
+                        $action->getRecordSelect(),
+                        Select::make('relationship')
+                            ->options([
+                                'father' => 'Father',
+                                'mother' => 'Mother',
+                                'guardian' => 'Guardian',
+                                'other' => 'Other',
+                            ])
+                            ->required()
+                            ->default('guardian'),
+                        
+                        Toggle::make('is_primary_contact')
+                            ->label('Primary Contact')
+                            ->default(false),
+                        
+                        Toggle::make('can_view_grades')
+                            ->label('Can View Grades')
+                            ->default(true),
+                        
+                        Toggle::make('can_view_attendance')
+                            ->label('Can View Attendance')
+                            ->default(true),
+                    ])
+                    // ->preloadRecordSelect(),
             ])
             ->recordActions([
                 EditAction::make(),
-                DetachAction::make(),
-                DeleteAction::make(),
+                DetachAction::make()
+                   ->label('Unlink')
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DetachBulkAction::make(),
-                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

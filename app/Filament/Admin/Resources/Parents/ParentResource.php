@@ -9,10 +9,12 @@ use App\Filament\Admin\Resources\Parents\Schemas\ParentForm;
 use App\Filament\Admin\Resources\Parents\Tables\ParentsTable;
 use App\Models\ParentModel;
 use BackedEnum;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class ParentResource extends Resource
 {
@@ -41,7 +43,7 @@ class ParentResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ChildrenRelationManager::class
         ];
     }
 

@@ -52,7 +52,7 @@ class ClassSession extends Model
     public function startSession(): void {
         $this->update([
             'started_at' => now(),
-            'status' => 'in_progress'
+            'status' => 'in-progress'
         ]);
     }
 

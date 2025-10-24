@@ -122,17 +122,17 @@ class EnrollmentsRelationManager extends RelationManager
                     ]),
             ])
             ->headerActions([
-                CreateAction::make()->label('Enroll Student'),
+                CreateAction::make()
+                   ->label('Enroll Student'),
             ])
             ->recordActions([
-                EditAction::make(),
-                DissociateAction::make(),
-                DeleteAction::make(),
+                DissociateAction::make()
+                   ->label('UnEnroll Student'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DissociateBulkAction::make(),
-                    DeleteBulkAction::make(),
+                    DissociateBulkAction::make()
+                        ->label('Bulk UnEnroll Student'),
                 ]),
             ]);
     }

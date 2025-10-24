@@ -103,7 +103,7 @@ class CoursesRelationManager extends RelationManager
             ])
             ->headerActions([
                 AttachAction::make()
-                    ->label('Attach Course')
+                    ->label('Link Course')
                     ->color('success')
                     ->icon('heroicon-o-link')
                     ->recordSelectSearchColumns(['title', 'course_code']) 
@@ -113,10 +113,10 @@ class CoursesRelationManager extends RelationManager
                     ),
             ])
             ->recordActions([
+                EditAction::make(),
                 DetachAction::make()
-                    ->label('Detach Course')
-                    ->color('danger')
-                    ->icon('heroicon-o-link'),
+                    ->label('Unlink Course')
+                    ->color('danger'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -57,4 +57,57 @@ class Assignment extends Model
         return $this->hasManyThrough(Grade::class, Submission::class);
     }
 
+    // Scopes
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published');
+    }
+
+    public function scopeOverdue($query)
+    {
+        return $query->where('due_at', '<', now())
+                    ->where('status', 'published');
+    }
+
+    public function scopeUpcoming($query)
+    {
+        return $query->where('due_at', '>', now())
+                    ->where('status', 'published');
+    }
+
+    // Helper Methods
+    public function isOverdue(): bool
+    {
+        return $this->due_at->isPast();
+    }
+
+    public function getDaysUntilDue(): int
+    {
+        return $this->due_at->diffInDays(now(), false);
+    }
+
+    public function getSubmissionCount(): int
+    {
+        return $this->submissions()->count();
+    }
+
+    public function getGradedCount(): int
+    {
+        return $this->submissions()->where('status', 'graded')->count();
+    }
+
+    public function getAverageScore(): float
+    {
+        return $this->grades()
+            ->where('is_published', true)
+            ->avg('percentage') ?? 0;
+    }
+
+    public function hasStudentSubmitted(int $studentId): bool
+    {
+        return $this->submissions()
+            ->where('student_id', $studentId)
+            ->exists();
+    }
+
 }
