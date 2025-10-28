@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Grade extends Model
 {
-       protected $fillable = [
+    protected $fillable = [
         'submission_id',
         'instructor_id',
         'score',

@@ -20,7 +20,7 @@ class InstructorResource extends Resource
 {
     protected static ?string $model = Instructor::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::UserGroup;
 
     protected static ?int $navigationSort = 3;
 

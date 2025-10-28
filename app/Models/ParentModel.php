@@ -68,11 +68,11 @@ class ParentModel extends Model
     }
 
     public function getChildrenProgress(): array {
-        return $this->children()->map(function ($child) {
+        return $this->children->map(function ($child) {
             return [
                 "student" => $child->student_id,
                 "name" => $child->user->full_name,
-                "progress" => $child->calculateOveralProgress(),
+                "progress" => $child->calculateOverallProgress(),
                 "attendance_rate" => $child->calculateAttendanceRate()
             ];
         })->toArray();

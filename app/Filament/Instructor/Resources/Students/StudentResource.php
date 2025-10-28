@@ -15,17 +15,36 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class StudentResource extends Resource
 {
     protected static ?string $model = Student::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::UserGroup;
+    protected static string|UnitEnum|null $navigationGroup = 'Students';
+    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationLabel = 'My Students';
 
-    public static function form(Schema $schema): Schema
+    public static function getEloquentQuery(): Builder
     {
-        return StudentForm::configure($schema);
+        return parent::getEloquentQuery()
+            ->whereHas('enrollments.course.instructors', function ($query) {
+                $query->where('instructor_course.instructor_id', Auth::user()->instructor->id);
+            })
+            ->with(['user', 'enrollments.course', 'attendances', 'submissions']);
     }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    // public static function form(Schema $schema): Schema
+    // {
+    //     return StudentForm::configure($schema);
+    // }
 
     public static function table(Table $table): Table
     {
@@ -43,8 +62,6 @@ class StudentResource extends Resource
     {
         return [
             'index' => ListStudents::route('/'),
-            'create' => CreateStudent::route('/create'),
-            'edit' => EditStudent::route('/{record}/edit'),
         ];
     }
 
@@ -54,5 +71,14 @@ class StudentResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+       public static function getNavigationBadge(): ?string
+    {
+        $count = static::getModel()::whereHas('enrollments.course.instructors', function ($query) {
+            $query->where('instructor_course.instructor_id', Auth::user()->instructor->id);
+        })->count();
+
+        return (string) $count;
     }
 }

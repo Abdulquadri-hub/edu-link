@@ -538,7 +538,7 @@ class AssignmentResource extends Resource
                     ->label('Overdue')
                     ->query(fn (Builder $query) => $query->where('due_at', '<', now())),
             ])
-            ->actions([
+            ->recordActions([
                 Tables\Actions\Action::make('submit')
                     ->label('Submit')
                     ->icon('heroicon-o-paper-airplane')
@@ -619,7 +619,7 @@ class AssignmentResource extends Resource
                     ]))
                     ->visible(fn ($record) => $record->submissions->first()?->grade?->is_published),
             ])
-            ->bulkActions([])
+            ->toolbarActions([])
             ->defaultSort('due_at', 'asc');
     }
 
@@ -866,10 +866,10 @@ class GradeResource extends Resource
                     ->query(fn (Builder $query) => $query->where('percentage', '<', 60))
                     ->toggle(),
             ])
-            ->actions([
+            ->recordActions([
                 Tables\Actions\ViewAction::make(),
             ])
-            ->bulkActions([])
+            ->toolbarActions([])
             ->defaultSort('published_at', 'desc');
     }
 
@@ -1079,7 +1079,7 @@ class ClassSessionResource extends Resource
                     ->query(fn (Builder $query) => $query->where('scheduled_at', '>', now()))
                     ->default(),
             ])
-            ->actions([
+            ->recordActions([
                 Tables\Actions\Action::make('join')
                     ->label('Join Class')
                     ->icon('heroicon-o-video-camera')
@@ -1091,7 +1091,7 @@ class ClassSessionResource extends Resource
                 
                 Tables\Actions\ViewAction::make(),
             ])
-            ->bulkActions([])
+            ->toolbarActions([])
             ->defaultSort('scheduled_at', 'asc');
     }
 

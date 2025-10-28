@@ -89,7 +89,7 @@ class Student extends Model
     
     //helpers methods 
     
-    public function calculateOveralProgress(): float {
+    public function calculateOverallProgress(): float {
         return $this->activeEnrollments()->avg('progress_percentage');
     }
 
