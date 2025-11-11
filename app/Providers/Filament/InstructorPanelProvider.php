@@ -32,6 +32,8 @@ class InstructorPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Green,
             ])
+            // ->databaseNotifications()
+            // ->databaseNotificationsPolling('30s')
             ->discoverResources(in: app_path('Filament/Instructor/Resources'), for: 'App\Filament\Instructor\Resources')
             ->discoverPages(in: app_path('Filament/Instructor/Pages'), for: 'App\Filament\Instructor\Pages')
             ->pages([

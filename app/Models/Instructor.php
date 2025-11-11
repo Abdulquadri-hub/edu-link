@@ -88,7 +88,7 @@ class Instructor extends Model
     public function getStudentCount(): int
     {
         return Student::whereHas('enrollments.course.instructors', function ($query) {
-            $query->where('instructor_id', $this->id);
+            $query->where('instructor_course.instructor_id', $this->id);
         })->distinct()->count();
     }
 

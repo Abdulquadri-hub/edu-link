@@ -1,7 +1,15 @@
 <?php
 
+use App\Http\Controllers\Auth\RegisterController;
+use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Homepage\HomeController;
 
- Route::get('/', function () {
-     return view('welcome');
- })->name('home');
+
+Route::controller(HomeController::class)->group(function () {
+   Route::get('/', 'index')->name('home');
+});
+
+Route::controller(RegisterController::class)->group(function () {
+    Route::get('/register', 'index')->name('register');
+});

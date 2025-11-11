@@ -32,6 +32,8 @@ class ParentPanelProvider extends PanelProvider
             ->login()
             ->spa()
             ->brandName('EduLink Parent')
+            // ->databaseNotifications()
+            // ->databaseNotificationsPolling('30s')
             ->discoverResources(in: app_path('Filament/Parent/Resources'), for: 'App\Filament\Parent\Resources')
             ->discoverPages(in: app_path('Filament/Parent/Pages'), for: 'App\Filament\Parent\Pages')
             ->pages([

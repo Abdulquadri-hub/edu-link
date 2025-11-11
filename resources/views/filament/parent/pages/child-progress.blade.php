@@ -4,6 +4,5 @@
         $children = $viewData['children'];
         $summary = $viewData['summary'];
     @endphp
-
     
 </x-filament-panels::page>
