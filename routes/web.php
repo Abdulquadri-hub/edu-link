@@ -12,4 +12,6 @@ Route::controller(HomeController::class)->group(function () {
 
 Route::controller(RegisterController::class)->group(function () {
     Route::get('/register', 'index')->name('register');
+    Route::post('/register', 'save')->name('register.save');
+    Route::get('/register/success', 'success')->name('register.success');
 });

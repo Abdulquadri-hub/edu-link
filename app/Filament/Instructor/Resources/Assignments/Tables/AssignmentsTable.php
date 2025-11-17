@@ -7,6 +7,7 @@ use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use App\Events\AssignmentCreated;
 use Filament\Actions\DeleteAction;
 use Filament\Tables\Filters\Filter;
 use Filament\Actions\BulkActionGroup;
@@ -98,6 +99,9 @@ class AssignmentsTable
                     ->modalDescription('Students will be notified and can start submitting.')
                     ->action(function (Assignment $record) {
                         $record->update(['status' => 'published']);
+
+                        event(new AssignmentCreated($record));
+
                         Notification::make()
                             ->success()
                             ->title('Assignment published')

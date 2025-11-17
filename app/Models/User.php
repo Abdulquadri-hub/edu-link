@@ -70,10 +70,10 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(ParentModel::class);
     }
 
-    public function notifications(): HasMany
-    {
-        return $this->hasMany(Notification::class);
-    }
+    // public function notifications(): HasMany
+    // {
+    //     return $this->hasMany(Notification::class);
+    // }
 
     public function initials(): string
     {

@@ -19,7 +19,7 @@ class ClassSessionForm
     {
         return $schema
             ->components([
-                 Section::make('Session Details')
+                Section::make('Session Details')
                     ->schema([
                         Select::make('course_id')
                             ->relationship('course', 'title', function ($query) {

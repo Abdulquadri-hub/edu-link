@@ -55,14 +55,14 @@ class ParentModel extends Model
 
     public function canViewChildGrades(int $childId): bool {
         return $this->children()
-            ->where('student_id', $childId)
+            ->where('student_parent.student_id', $childId)
             ->wherePivot('can_view_grades', true)
             ->exists();
     }
 
     public function canViewChildAttendance(int $childId): bool {
         return $this->children()
-            ->where('student_id', $childId)
+            ->where('student_parent.student_id', $childId)
             ->wherePivot('can_view_attendance', true)
             ->exists();
     }

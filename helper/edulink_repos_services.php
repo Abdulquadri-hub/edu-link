@@ -11,7 +11,7 @@
 // PART 1: REPOSITORY INTERFACES
 // ============================================
 
-namespace App\Contracts\Repositories;
+// namespace App\Contracts\Repositories;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -199,7 +199,7 @@ interface ReportRepositoryInterface extends BaseRepositoryInterface
 // PART 2: REPOSITORY IMPLEMENTATIONS
 // ============================================
 
-namespace App\Repositories\Eloquent;
+// namespace App\Repositories\Eloquent;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -267,7 +267,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
 }
 
 // Student Repository
-namespace App\Repositories\Eloquent;
+// namespace App\Repositories\Eloquent;
 
 use App\Contracts\Repositories\StudentRepositoryInterface;
 use App\Models\Student;
@@ -703,7 +703,6 @@ class ClassSessionRepository extends BaseRepository implements ClassSessionRepos
 // PART 3: SERVICE INTERFACES
 // ============================================
 
-namespace App\Contracts\Services;
 
 // Student Service Interface
 interface StudentServiceInterface
@@ -738,7 +737,7 @@ interface StudentServiceInterface
 }
 
 // Parent Service
-namespace App\Services;
+
 
 use App\Contracts\Services\ParentServiceInterface;
 use App\Contracts\Repositories\ParentRepositoryInterface;
@@ -1912,7 +1911,7 @@ class MaterialRepository extends BaseRepository implements MaterialRepositoryInt
 namespace App\Repositories\Eloquent;
 
 use App\Contracts\Repositories\NotificationRepositoryInterface;
-use App\Models\Notification;
+
 use Illuminate\Database\Eloquent\Collection;
 
 class NotificationRepository extends BaseRepository implements NotificationRepositoryInterface

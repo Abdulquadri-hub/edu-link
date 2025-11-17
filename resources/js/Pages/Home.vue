@@ -1,10 +1,18 @@
 <script setup>
-import Navbar from '../Components/Layouts/Navbar.vue';
-import Hero from '../Components/Layouts/Hero.vue'
+import HeroSection from '../Components/Layouts/HeroSection.vue'
+import FeaturesSection from '../Components/Layouts/FeaturesSection.vue';
+import WhyChooseUsSection from '../Components/Layouts/WhyChooseUsSection.vue';
+import TeamMembersSection from '../Components/Layouts/TeamMembersSection.vue';
+import FooterSection from '../Components/Layouts/FooterSection.vue';
+import NavbarSection from '../Components/Layouts/NavbarSection.vue';
 
 </script>
 
 <template>
-    <Navbar /> 
-    <Hero />
+    <NavbarSection /> 
+    <HeroSection />
+    <FeaturesSection />
+    <TeamMembersSection />
+    <WhyChooseUsSection />
+    <FooterSection />
 </template>

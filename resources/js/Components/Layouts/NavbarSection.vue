@@ -3,15 +3,15 @@
     <div class="container mx-auto px-6 lg:px-8">
       <div class="flex items-center justify-between h-20">
         <!-- Logo -->
-        <div class="flex-shrink-0">
+        <div class="shrink-0">
           <a href="#" class="flex items-center space-x-3 group">
             <div
-              class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-all duration-300 shadow-lg"
+              class="w-12 h-12 bg-linear-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-all duration-300 shadow-lg"
             >
               <span class="text-2xl font-bold text-white">E</span>
             </div>
             <span
-              class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent"
+              class="text-2xl font-bold bg-linear-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent"
             >
               EduLink
             </span>

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Instructor\Resources\ClassSessions\Tables;
 
+use App\Events\EndClass;
+use App\Events\StartClass;
 use Filament\Tables\Table;
 use App\Models\ClassSession;
 use Filament\Actions\Action;
@@ -81,6 +83,9 @@ class ClassSessionsTable
                     ->modalDescription('This will mark the session as in-progress and record the start time.')
                     ->action(function (ClassSession $record) {
                         $record->startSession();
+
+                        event(new StartClass($record));
+
                         Notification::make()
                             ->success()
                             ->title('Class started')
@@ -97,6 +102,9 @@ class ClassSessionsTable
                     ->modalDescription('This will mark the session as completed and calculate the duration.')
                     ->action(function (ClassSession $record) {
                         $record->endSession();
+
+                        event(new EndClass($record));
+
                         Notification::make()
                             ->success()
                             ->title('Class ended')

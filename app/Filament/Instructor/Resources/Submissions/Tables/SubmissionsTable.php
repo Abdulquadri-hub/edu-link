@@ -5,6 +5,7 @@ namespace App\Filament\Instructor\Resources\Submissions\Tables;
 use App\Models\Submission;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
+use App\Events\GradePublished;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Filters\Filter;
@@ -229,6 +230,8 @@ class SubmissionsTable
                             'is_published' => true,
                             'published_at' => now(),
                         ]);
+
+                        event(new GradePublished($record->grade));
                         
                         Notification::make()
                             ->success()
