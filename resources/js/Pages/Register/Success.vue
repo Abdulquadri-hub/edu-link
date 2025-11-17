@@ -2,20 +2,27 @@
 import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 
+// const props = defineProps({
+//   email: String,
+//   message: String
+// });
+
+// const isResending = ref(false);
+// const resendMessage = ref('');
+
 const props = defineProps({
-  email: String,
-  message: String
+  status: String,
 });
 
 const isResending = ref(false);
-const resendMessage = ref('');
+const resendMessage = ref(props.status);
 
 const resendVerification = async () => {
   isResending.value = true;
   resendMessage.value = '';
   
   try {
-    await router.post('/register/resend-verification', {
+    await router.post('/email/verification-notification', {
       email: props.email
     }, {
       preserveScroll: true,

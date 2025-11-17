@@ -6,10 +6,12 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Events\Registered;
 use App\Http\Requests\RegistrationRequest;
 use App\Contracts\Services\ParentServiceInterface;
 use App\Contracts\Services\StudentServiceInterface;
 use App\Contracts\Services\InstructorServiceInterface;
+use Illuminate\Support\Facades\Auth;
 
 class RegisterController extends Controller
 {
@@ -31,12 +33,16 @@ class RegisterController extends Controller
                 $role = $data['role'];
 
                 // Create user based on role
-                $user = match($role) {
+                $profile = match($role) {
                     'student' => $this->studentService->createStudent($data),
                     'parent' => $this->parentService->createParent($data),
                     'instructor' => $this->instructorService->createInstructor($data),
                     default => throw new \Exception('Invalid role selected')
                 };
+
+                event(new Registered($profile->user));
+
+                Auth::login($profile->user);
 
                 // Send welcome email
                 // $this->sendWelcomeEmail($user, $role);
@@ -46,6 +52,8 @@ class RegisterController extends Controller
                     'message' => 'Registration successful! Please check your email to verify your account.',
                     'email' => $data['email']
                 ]);
+
+                // return redirect()->route('verification.notice')->with('status', 'Registration successful! Please check your email to verify your account.');
             });
 
         } catch (\Exception $e) {
