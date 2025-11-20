@@ -88,6 +88,16 @@ class StudentForm
                                 ])
                                 ->columns(2),
                             ]),
+                            
+                        Select::make('academic_level_id')
+                            ->label('Current Grade Level')
+                            ->relationship('academicLevel', 'name', fn ($query) => $query->active()->ordered())
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Select the student\'s current grade level')
+                            ->native(false),  
+
                         TextInput::make('student_id')
                             ->required()
                             ->unique(ignoreRecord: true)

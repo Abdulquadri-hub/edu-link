@@ -29,6 +29,18 @@ class CoursesTable
                     ->searchable()
                     ->sortable()
                     ->limit(30),
+                TextColumn::make('academicLevel.name')
+                    ->label('Grade Level')
+                    ->badge()
+                    ->color(fn ($record) => match($record->academicLevel?->level_type) {
+                        'elementary' => 'success',
+                        'middle' => 'warning',
+                        'high' => 'danger',
+                        default => 'gray',
+                    })
+                    ->sortable()
+                    ->searchable(),
+
                 TextColumn::make('category')
                     ->badge()
                     ->colors([
@@ -56,7 +68,7 @@ class CoursesTable
                     ->suffix(' weeks')
                     ->sortable(),
                 TextColumn::make('price')
-                    ->money('NGN')
+                    ->money('USD')
                     ->sortable(),
                 TextColumn::make('enrollments_count')
                     ->counts('enrollments')
@@ -68,6 +80,12 @@ class CoursesTable
                     ->sortable(),
             ])
             ->filters([
+                SelectFilter::make('academic_level_id')
+                    ->label('Grade Level')
+                    ->relationship('academicLevel', 'name')
+                    ->searchable()
+                    ->preload(),
+
                 SelectFilter::make('category'),
                 SelectFilter::make('level'),
                 SelectFilter::make('status'),

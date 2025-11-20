@@ -3,9 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Course extends Model
 {
@@ -13,7 +14,7 @@ class Course extends Model
     
     protected $fillable = [
         "course_code", "title", "description", "category", 
-        "level", "duration_weeks", "credit_hours", "price", "thumbnail", "learning_objectives", "prerequisites", "status", "max_students", ""
+        "level", "duration_weeks", "credit_hours", "price", "thumbnail", "learning_objectives", "prerequisites", "status", "max_students", "academic_level_id"
     ];
 
     protected $casts = [
@@ -25,6 +26,10 @@ class Course extends Model
     ];
 
     // relationships
+
+    public function academicLevel(): BelongsTo {
+        return $this->belongsTo(AcademicLevel::class);
+    }
 
     public function instructors(): BelongsToMany {
         return $this->belongsToMany(Instructor::class, "instructor_course", "course_id", "instructor_id")->withPivot(['assigned_date', 'is_primary_instructor'])->withTimestamps();
@@ -64,9 +69,44 @@ class Course extends Model
         return $this->hasMany(Material::class);
     }
 
-    //accessors 
+    public function scopeByAcademicLevel($query, int $levelId)
+    {
+        return $query->where('academic_level_id', $levelId);
+    }
 
-    // scopes
+    public function scopeElementary($query)
+    {
+        return $query->whereHas('academicLevel', function ($q) {
+            $q->where('level_type', 'elementary');
+        });
+    }
 
-    // helpers
+    public function scopeMiddle($query)
+    {
+        return $query->whereHas('academicLevel', function ($q) {
+            $q->where('level_type', 'middle');
+        });
+    }
+
+    public function scopeHigh($query)
+    {
+        return $query->whereHas('academicLevel', function ($q) {
+            $q->where('level_type', 'high');
+        });
+    }
+
+    public function getGradeLevelName(): ?string
+    {
+        return $this->academicLevel?->name;
+    }
+
+    public function getGradeNumber(): ?int
+    {
+        return $this->academicLevel?->grade_number;
+    }
+
+    public function isForGradeLevel(int $gradeNumber): bool
+    {
+        return $this->academicLevel?->grade_number === $gradeNumber;
+    }
 }

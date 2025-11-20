@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\Courses\Schemas;
 
 use Filament\Schemas\Schema;
+use App\Models\AcademicLevel;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -25,6 +26,30 @@ class CourseForm
                         TextInput::make('title')
                             ->required()
                             ->maxLength(255),
+
+                        Select::make('academic_level_id')
+                            ->label('Academic Level (Grade)')
+                            ->relationship('academicLevel', 'name')
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Select the grade level this course is designed for')
+                            ->live()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if ($state) {
+                                    $academicLevel = AcademicLevel::find($state);
+                                    if ($academicLevel) {
+                                        $gradeNumber = $academicLevel->grade_number;
+                                        if ($gradeNumber <= 7) {
+                                            $set('level', 'beginner');
+                                        } elseif ($gradeNumber <= 10) {
+                                            $set('level', 'intermediate');
+                                        } else {
+                                            $set('level', 'advanced');
+                                        }
+                                    }
+                                }
+                            }),
                         Select::make('category')
                             ->options([
                                 'academic' => 'Academic',

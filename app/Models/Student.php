@@ -11,23 +11,29 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Student extends Model
 {
-    use SoftDeletes;
+    // use SoftDeletes;
 
     protected $fillable = [
         'user_id', 'student_id', 'date_of_birth',
         'gender', 'address', 'city', ' state',
         'country', 'emergency_contact_name', 'emergency_contact_phone', 'enrollment_date',
-        'enrollment_status', "notes"
+        'enrollment_status', "notes", 'academic_level_id'
     ];
 
     protected $casts = [
         'enrollment_date' => 'datetime',
-        'date_of_birth' => 'datetime'
+        'date_of_birth' => 'datetime',
+        'academic_level_id' => 'integer',
     ];
+
+    public function academicLevel(): BelongsTo {
+        return $this->belongsTo(AcademicLevel::class);
+    }
 
     public function user(): BelongsTo {
         return $this->belongsTo(User::class);
     }
+
 
     //students can have many parents
     public function parents(): BelongsToMany {
@@ -77,6 +83,11 @@ class Student extends Model
         return trim("{$this->address}, {$this->city}, {$this->state}, {$this->country}");
     }
 
+    public function getGradeLevelAttribute(): ?string {
+        return $this->academicLevel?->name;
+    }
+
+
     //scopes
 
     public function scopeActive($query) {
@@ -85,6 +96,10 @@ class Student extends Model
 
     public function scopeGraduated($query) {
         $query->where('enrollment_status', 'graduated');
+    }
+
+    public function scopeByGradeLevel($query, int $levelId) {
+        return $query->where('academic_level_id', $levelId);
     }
     
     //helpers methods 
@@ -103,6 +118,47 @@ class Student extends Model
 
     public function hasParent($parentId) {
         return $this->parents()->where('parent_id', $parentId)->exists();
+    }
+
+    public function getCurrentGradeNumber(): ?int
+    {
+        return $this->academicLevel?->grade_number;
+    }
+
+    public function isInElementary(): bool
+    {
+        return $this->academicLevel?->isElementary() ?? false;
+    }
+
+    public function isInMiddle(): bool
+    {
+        return $this->academicLevel?->isMiddle() ?? false;
+    }
+
+    public function isInHigh(): bool
+    {
+        return $this->academicLevel?->isHigh() ?? false;
+    }
+
+    public function canEnrollInCourse(Course $course): bool
+    {
+        // Check if course is for student's grade level
+        if ($course->academic_level_id && $this->academic_level_id) {
+            return $course->academic_level_id === $this->academic_level_id;
+        }
+        
+        return true; // Allow enrollment if no level restrictions
+    }
+
+    public function getRecommendedCourses()
+    {
+        return Course::where('academic_level_id', $this->academic_level_id)
+                     ->where('status', 'active')
+                     ->whereDoesntHave('enrollments', function ($query) {
+                         $query->where('student_id', $this->id)
+                               ->where('status', 'active');
+                     })
+                     ->get();
     }
 
 }

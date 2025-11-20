@@ -36,6 +36,18 @@ class StudentsTable
                     ->label('First Name')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('academicLevel.name')
+                    ->label('Grade Level')
+                    ->badge()
+                    ->color(fn ($record) => match($record->academicLevel?->level_type) {
+                        'elementary' => 'success',
+                        'middle' => 'warning',
+                        'high' => 'danger',
+                        default => 'gray',
+                    })
+                    ->sortable()
+                    ->searchable(),
+
                 TextColumn::make('date_of_birth')
                     ->date()
                     ->sortable(),
@@ -83,7 +95,7 @@ class StudentsTable
                         'suspended' => 'Suspended',
                     ]),
                 SelectFilter::make('gender'),
-                TrashedFilter::make(),
+                // TrashedFilter::make(),
             ])
             ->recordActions([
                 ViewAction::make(),
