@@ -39,15 +39,11 @@ class ParentUploadedAssignmentResource extends Resource
         
         return parent::getEloquentQuery()
             ->where(function (Builder $query) use ($instructorId) {
-                // Show uploads related to assignments in the instructor's courses
                 $query->whereHas('assignment.course.instructors', function ($q) use ($instructorId) {
                     $q->where('instructor_course.instructor_id', $instructorId);
-                    $q->where('instructors.deleted_at', null);
                 })
-                // OR show uploads related to courses taught by the instructor (for 'teach' status uploads)
                 ->orWhereHas('course.instructors', function ($q) use ($instructorId) {
                     $q->where('instructor_course.instructor_id', $instructorId);
-                    $q->where('instructors.deleted_at', null);
                 });
             })
             ->whereIn('status', ['submitted', 'teach', 'graded'])
