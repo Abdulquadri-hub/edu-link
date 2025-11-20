@@ -4,6 +4,7 @@ namespace App\Filament\Student\Resources\AvailableCourses\Tables;
 
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Services\EnrollmentService;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -130,6 +131,18 @@ class AvailableCoursesTable
                     ->action(function (Course $record, array $data) {
                         $student = Auth::user()->student;
                         
+                        // Validate eligibility
+                        if ($record->academic_level_id !== $student->academic_level_id) {
+                            throw new \Exception('This course is not available for your grade level');
+                        }
+
+                        if ($student->enrollments()->where('course_id', $record->id)->whereIn('status', ['active', 'pending_payment'])->exists()) {
+                            throw new \Exception('You are already enrolled in this course or have a pending payment');
+                        }
+
+                        // Calculate price
+                        $calc = EnrollmentService::calculatePriceForStatic($student, $record, (string)$data['frequency']);
+
                         // Create pending enrollment
                         $enrollment = Enrollment::create([
                             'student_id' => $student->id,
@@ -137,10 +150,10 @@ class AvailableCoursesTable
                             'enrolled_at' => now(),
                             'status' => 'pending_payment',
                             'progress_percentage' => 0,
-                            'notes' => json_encode([
-                                'frequency' => $data['frequency'],
-                                'price' => $record->calculatePrice((int)$data['frequency']),
-                            ]),
+                            'notes' => json_encode($calc['notes']),
+                            'frequency' => $data['frequency'],
+                            'price' => $calc['price'],
+                            'academic_level_id' => $record->academic_level_id,
                         ]);
                         
                         // Send notification to student
@@ -161,6 +174,25 @@ class AvailableCoursesTable
                         //     ));
                         // }
                         
+                        // Notify student and parent(s)
+                        try {
+                            Auth::user()->notify(new \App\Notifications\EnrollmentPendingPayment(
+                                $enrollment,
+                                (int)$data['frequency'],
+                                $calc['price']
+                            ));
+
+                            foreach ($student->parents as $parent) {
+                                $parent->user?->notify(new \App\Notifications\EnrollmentPendingPayment(
+                                    $enrollment,
+                                    (int)$data['frequency'],
+                                    $calc['price']
+                                ));
+                            }
+                        } catch (\Exception $e) {
+                            // non-blocking
+                        }
+
                         Notification::make()
                             ->success()
                             ->title('Enrollment Request Submitted')

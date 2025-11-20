@@ -25,6 +25,26 @@ class Course extends Model
         'max_students' => 'integer',
     ];
 
+    // Calculate price for a given student grade and frequency (3 or 5)
+    public function calculatePrice(int $frequency, ?int $gradeNumber = null): float
+    {
+        // If grade number not provided, fallback to course grade number
+        $gradeNumber = $gradeNumber ?? $this->academicLevel?->grade_number;
+        if (!$gradeNumber) {
+            // fallback default primary pricing
+            return $frequency === 5 ? 120.00 : 80.00;
+        }
+
+        $isPrimary = $gradeNumber >= 1 && $gradeNumber <= 7;
+        $isSecondary = $gradeNumber >= 8 && $gradeNumber <= 12;
+
+        if ($isPrimary) {
+            return $frequency === 5 ? 120.00 : 80.00;
+        }
+
+        return $frequency === 5 ? 150.00 : 100.00;
+    }
+
     // relationships
 
     public function academicLevel(): BelongsTo {

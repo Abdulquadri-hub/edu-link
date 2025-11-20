@@ -5,6 +5,11 @@ namespace App\Filament\Parent\Resources\Children\Tables;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use App\Models\AcademicLevel;
+use App\Models\Course;
+use App\Models\Enrollment;
+use App\Services\EnrollmentService;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\FileUpload;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Illuminate\Support\Facades\Auth;
@@ -108,6 +113,92 @@ class ChildrenTable
                         Textarea::make('reason')->label('Reason (optional)'),
                     ])
                     ->visible(fn ($record) => AcademicLevel::where('grade_number', '>', $record->academicLevel?->grade_number ?? 0)->exists()),
+
+                Action::make('enroll_child')
+                    ->label('Enroll Child')
+                    ->icon('heroicon-o-plus-circle')
+                    ->color('primary')
+                    ->form([
+                        Select::make('course_id')
+                            ->label('Course')
+                            ->options(function () {
+                                $courses = Course::where('status', 'active')
+                                    ->get();
+                                return $courses->pluck('title', 'id');
+                            })
+                            ->required(),
+                        Select::make('frequency')
+                            ->label('Frequency')
+                            ->options(['3' => '3x per week', '5' => '5x per week'])
+                            ->required(),
+                    ])
+                    ->action(function ($record, $data) {
+                        $student = $record; // Parent's child record is the student
+                        $course = Course::find($data['course_id']);
+                        if ($course->academic_level_id !== $student->academic_level_id) {
+                            throw new \Exception('This course is not available for the student\'s academic level');
+                        }
+
+                        if ($student->enrollments()->where('course_id', $course->id)->whereIn('status', ['active', 'pending_payment'])->exists()) {
+                            throw new \Exception('Student is already enrolled in this course or pending payment');
+                        }
+
+                        $calc = EnrollmentService::calculatePriceForStatic($student, $course, (string)$data['frequency']);
+
+                        $enrollment = Enrollment::create([
+                            'student_id' => $student->id,
+                            'course_id' => $data['course_id'],
+                            'enrolled_at' => now(),
+                            'status' => 'pending_payment',
+                            'progress_percentage' => 0,
+                            'notes' => json_encode($calc['notes']),
+                            'frequency' => $data['frequency'],
+                            'price' => $calc['price'],
+                            'academic_level_id' => $course->academic_level_id,
+                        ]);
+
+                        // notify student and parents
+                        try {
+                            $student->user?->notify(new \App\Notifications\EnrollmentPendingPayment($enrollment, (int)$data['frequency'], $calc['price']));
+                            foreach ($student->parents as $parent) {
+                                $parent->user?->notify(new \App\Notifications\EnrollmentPendingPayment($enrollment, (int)$data['frequency'], $calc['price']));
+                            }
+                        } catch (\Exception $e) {
+                            // non-blocking
+                        }
+                    })
+                    ->visible(fn ($record) => true),
+
+                Action::make('upload_receipt')
+                    ->label('Upload Receipt')
+                    ->icon('heroicon-o-upload')
+                    ->color('primary')
+                    ->form([
+                        Select::make('enrollment_id')
+                            ->label('Pending Enrollment')
+                            ->options(fn($record) => $record->enrollments()->where('status', 'pending_payment')->get()->pluck('course.title', 'id'))
+                            ->required(),
+                        FileUpload::make('receipt')
+                            ->label('Payment Receipt')
+                            ->maxSize(10240)
+                            ->acceptedFileTypes(['image/*', 'application/pdf'])
+                            ->required(),
+                    ])
+                    ->action(function ($record, $data) {
+                        $en = \App\Models\Enrollment::find($data['enrollment_id']);
+                        if (!$en || $en->student_id !== $record->id) {
+                            throw new \Exception('Invalid enrollment selected');
+                        }
+                        $notes = $en->notes ?? [];
+                        $notes['receipt'] = $data['receipt'] ?? null;
+                        $en->update(['notes' => $notes]);
+                        try {
+                            $en->student->user?->notify(new \App\Notifications\EnrollmentPendingPayment($en, (int)$en->frequency, $en->price));
+                        } catch (\Exception $e) {
+                            // ignore
+                        }
+                    })
+                    ->visible(fn ($record) => $record->enrollments()->where('status', 'pending_payment')->exists()),
 
                 Action::make('viewProgress')
                     ->label('View Progress')

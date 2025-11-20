@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Enrollment extends Model
 {
     protected $fillable = [
-        "student_id", "course_id", "enrolled_at", "completed", "status", "progress_percentage", "final_grade", "notes"
+        "student_id", "course_id", "enrolled_at", "completed", "status", "progress_percentage", "final_grade", "notes",
+        'frequency', 'price', 'academic_level_id'
     ];
 
     protected $casts = [
@@ -18,6 +19,10 @@ class Enrollment extends Model
         "progress_percentage" => "decimal:2",
         "final_grade" => "decimal:2",
         "completed_at" => "datetime",
+        'notes' => 'array',
+        'price' => 'decimal:2',
+        'frequency' => 'string',
+        'academic_level_id' => 'integer',
     ];
 
     public function student(): BelongsTo {
@@ -26,6 +31,10 @@ class Enrollment extends Model
 
     public function course(): BelongsTo {
         return $this->belongsTo(Course::class);
+    }
+
+    public function academicLevel(): BelongsTo {
+        return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
     }
 
     public function grade(): HasOne

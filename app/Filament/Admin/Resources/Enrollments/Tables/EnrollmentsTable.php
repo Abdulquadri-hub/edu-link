@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources\Enrollments\Tables;
 
 use Filament\Tables\Table;
 use Filament\Actions\EditAction;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -11,6 +12,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
+use Filament\Notifications\Notification as FilamentNotification;
+use App\Notifications\EnrollmentApproved;
+use App\Models\Enrollment;
 
 class EnrollmentsTable
 {
@@ -52,6 +56,11 @@ class EnrollmentsTable
                     ->date()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('notes.receipt')
+                    ->label('Receipt')
+                    ->url(fn ($record) => $record->notes['receipt'] ?? null)
+                    ->openUrlInNewTab()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -66,6 +75,28 @@ class EnrollmentsTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('approve_payment')
+                    ->label('Approve Payment')
+                    ->icon('heroicon-o-check')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->action(function (Enrollment $record) {
+                        if ($record->status !== 'pending_payment') {
+                            throw new \Exception('Only pending payment enrollments can be approved.');
+                        }
+                        $record->update(['status' => 'active', 'enrolled_at' => now()]);
+                        // notify student and parents
+                        try {
+                            $record->student->user?->notify(new EnrollmentApproved($record));
+                            foreach ($record->student->parents as $parent) {
+                                $parent->user?->notify(new EnrollmentApproved($record));
+                            }
+                        } catch (\Exception $e) {
+                            // non-blocking
+                        }
+                        FilamentNotification::make()->success()->title('Enrollment Approved')->body('Enrollment status set to active.')->send();
+                    })
+                    ->visible(fn ($record) => $record->status === 'pending_payment'),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
