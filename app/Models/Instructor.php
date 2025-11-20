@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Instructor extends Model
 {
-    use SoftDeletes;
+    // use SoftDeletes;
 
     // fillbales
     

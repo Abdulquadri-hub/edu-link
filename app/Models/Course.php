@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Course extends Model
 {
-    use SoftDeletes;
+    // use SoftDeletes;
     
     protected $fillable = [
         "course_code", "title", "description", "category", 

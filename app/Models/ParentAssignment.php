@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ParentAssignment extends Model
 {
-    use SoftDeletes;
+    // use SoftDeletes;
 
     protected $table = 'parent_assignments';
 
