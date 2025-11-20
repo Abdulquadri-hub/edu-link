@@ -5,6 +5,7 @@ namespace App\Filament\Parent\Resources\Children\Tables;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
+use App\Models\AcademicLevel;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Actions\BulkActionGroup;
@@ -105,7 +106,7 @@ class ChildrenTable
                     ->form([
                         \Filament\Forms\Components\Textarea::make('reason')->label('Reason (optional)'),
                     ])
-                    ->visible(fn ($record) => true),
+                    ->visible(fn ($record) => \App\Models\AcademicLevel::where('grade_number', '>', $record->academicLevel?->grade_number ?? 0)->exists()),
 
                 Action::make('viewProgress')
                     ->label('View Progress')

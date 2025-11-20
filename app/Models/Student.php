@@ -177,8 +177,8 @@ class Student extends Model
             throw new \Exception('Student has no academic level assigned.');
         }
 
-        $nextLevel = AcademicLevel::where('order', '>', $currentLevel->order)
-            ->orderBy('order', 'asc')
+        $nextLevel = AcademicLevel::where('grade_number', '>', $currentLevel->grade_number)
+            ->orderBy('grade_number', 'asc')
             ->first();
 
         if (!$nextLevel) {

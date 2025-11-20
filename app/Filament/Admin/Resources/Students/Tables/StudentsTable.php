@@ -15,6 +15,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
+use App\Models\AcademicLevel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\StudentPromotedToNextLevel;
@@ -125,7 +126,8 @@ class StudentsTable
                     })
                     ->form([
                         Textarea::make('reason')->label('Reason (optional)'),
-                    ]),
+                    ])
+                    ->visible(fn ($record) => AcademicLevel::where('grade_number', '>', $record->academicLevel?->grade_number ?? 0)->exists()),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
