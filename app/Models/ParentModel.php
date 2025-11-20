@@ -21,20 +21,20 @@ class ParentModel extends Model
         'recieves_weekly_report'
     ];
 
-    //casts
-    
     protected $casts = [
         "recieves_weekly_report" => 'boolean'
     ];
     
-    //relationships
+    // Relationships
     
-    public function user():BelongsTo {
+    public function user(): BelongsTo {
         return $this->belongsTo(User::class);
     }
 
     public function children(): BelongsToMany {
-        return $this->belongsToMany(Student::class, "student_parent", "parent_id", "student_id")->withPivot(["relationship", "is_primary_contact", "can_view_grades", "can_view_attendance"])->withTimestamps();
+        return $this->belongsToMany(Student::class, "student_parent", "parent_id", "student_id")
+            ->withPivot(["relationship", "is_primary_contact", "can_view_grades", "can_view_attendance"])
+            ->withTimestamps();
     }
 
     public function primaryChildren(): BelongsToMany {
@@ -45,13 +45,22 @@ class ParentModel extends Model
         return $this->hasMany(Report::class, "parent_id");
     }
 
-    // accessors / mutators
+    // NEW: Parent Assignments relationship
+    public function parentAssignments(): HasMany {
+        return $this->hasMany(ParentAssignment::class, 'parent_id');
+    }
+
+    public function pendingAssignments(): HasMany {
+        return $this->parentAssignments()->where('status', 'pending');
+    }
+
+    // Accessors / Mutators
 
     public function getFullAddressAttribute(): string {
         return trim("{$this->address}, {$this->city}, {$this->state}, {$this->country}");
     }
     
-    //helpers
+    // Helpers
 
     public function canViewChildGrades(int $childId): bool {
         return $this->children()
@@ -76,5 +85,18 @@ class ParentModel extends Model
                 "attendance_rate" => $child->calculateAttendanceRate()
             ];
         })->toArray();
+    }
+
+    // NEW: Get pending assignments count
+    public function getPendingAssignmentsCount(): int {
+        return $this->pendingAssignments()->count();
+    }
+
+    // NEW: Get assignments for specific child
+    public function getChildAssignments(int $studentId) {
+        return $this->parentAssignments()
+            ->where('student_id', $studentId)
+            ->with(['assignment.course', 'submission.grade'])
+            ->get();
     }
 }
