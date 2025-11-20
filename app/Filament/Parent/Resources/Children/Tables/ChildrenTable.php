@@ -4,12 +4,13 @@ namespace App\Filament\Parent\Resources\Children\Tables;
 
 use Filament\Tables\Table;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Textarea;
 use App\Models\AcademicLevel;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Illuminate\Support\Facades\Auth;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -100,13 +101,13 @@ class ChildrenTable
                     ->modalDescription(fn ($record) => 'Promote ' . $record->user->full_name . ' to the next grade level?')
                     ->modalSubmitActionLabel('Promote')
                     ->action(function ($record, $data) {
-                        $actor = auth()->user();
+                        $actor = Auth::user();
                         $record->promoteToNextLevel($actor, $data['reason'] ?? null);
                     })
-                    ->form([
-                        \Filament\Forms\Components\Textarea::make('reason')->label('Reason (optional)'),
+                    ->schema([
+                        Textarea::make('reason')->label('Reason (optional)'),
                     ])
-                    ->visible(fn ($record) => \App\Models\AcademicLevel::where('grade_number', '>', $record->academicLevel?->grade_number ?? 0)->exists()),
+                    ->visible(fn ($record) => AcademicLevel::where('grade_number', '>', $record->academicLevel?->grade_number ?? 0)->exists()),
 
                 Action::make('viewProgress')
                     ->label('View Progress')
