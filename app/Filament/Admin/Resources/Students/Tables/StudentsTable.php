@@ -87,6 +87,12 @@ class StudentsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('academic_level_id')
+                    ->label('Grade Level')
+                    ->relationship('academicLevel', 'name')
+                    ->searchable()
+                    ->preload(),
+
                 SelectFilter::make('enrollment_status')
                     ->options([
                         'active' => 'Active',
