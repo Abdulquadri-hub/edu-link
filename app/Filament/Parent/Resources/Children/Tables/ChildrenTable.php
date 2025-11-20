@@ -4,6 +4,7 @@ namespace App\Filament\Parent\Resources\Children\Tables;
 
 use Filament\Tables\Table;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Textarea;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Actions\BulkActionGroup;
@@ -89,6 +90,23 @@ class ChildrenTable
             ->recordActions([
                 ViewAction::make(),
                 
+                Action::make('promote')
+                    ->label('Promote')
+                    ->icon('heroicon-o-chevron-up')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Promote Student')
+                    ->modalDescription(fn ($record) => 'Promote ' . $record->user->full_name . ' to the next grade level?')
+                    ->modalSubmitActionLabel('Promote')
+                    ->action(function ($record, $data) {
+                        $actor = auth()->user();
+                        $record->promoteToNextLevel($actor, $data['reason'] ?? null);
+                    })
+                    ->form([
+                        \Filament\Forms\Components\Textarea::make('reason')->label('Reason (optional)'),
+                    ])
+                    ->visible(fn ($record) => true),
+
                 Action::make('viewProgress')
                     ->label('View Progress')
                     ->icon('heroicon-o-chart-bar')

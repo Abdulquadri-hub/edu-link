@@ -13,6 +13,11 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Textarea;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\StudentPromotedToNextLevel;
 
 class StudentsTable
 {
@@ -106,6 +111,21 @@ class StudentsTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('promote')
+                    ->label('Promote')
+                    ->icon('heroicon-o-chevron-up')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Promote Student')
+                    ->modalDescription(fn ($record) => 'Promote ' . $record->user->full_name . ' to the next grade level?')
+                    ->modalSubmitActionLabel('Promote')
+                    ->action(function ($record, $data) {
+                        $actor = Auth::user();
+                        $record->promoteToNextLevel($actor, $data['reason'] ?? null);
+                    })
+                    ->form([
+                        Textarea::make('reason')->label('Reason (optional)'),
+                    ]),
                 DeleteAction::make(),
             ])
             ->toolbarActions([

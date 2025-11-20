@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\StudentPromotion;
+use Illuminate\Support\Facades\DB;
+use App\Notifications\StudentPromotedToNextLevel;
+use App\Models\AcademicLevel;
 
 class Student extends Model
 {
@@ -159,6 +163,56 @@ class Student extends Model
                                ->where('status', 'active');
                      })
                      ->get();
+    }
+
+    public function promotions()
+    {
+        return $this->hasMany(StudentPromotion::class);
+    }
+
+    public function promoteToNextLevel($actor, ?string $reason = null)
+    {
+        $currentLevel = $this->academicLevel;
+        if (!$currentLevel) {
+            throw new \Exception('Student has no academic level assigned.');
+        }
+
+        $nextLevel = AcademicLevel::where('order', '>', $currentLevel->order)
+            ->orderBy('order', 'asc')
+            ->first();
+
+        if (!$nextLevel) {
+            throw new \Exception('No next academic level available for promotion.');
+        }
+
+        return DB::transaction(function () use ($currentLevel, $nextLevel, $actor, $reason) {
+            $fromId = $currentLevel->id;
+            $toId = $nextLevel->id;
+
+            $promotion = StudentPromotion::create([
+                'student_id' => $this->id,
+                'from_academic_level_id' => $fromId,
+                'to_academic_level_id' => $toId,
+                'promoted_by_id' => $actor->id,
+                'promoted_by_type' => get_class($actor),
+                'reason' => $reason,
+            ]);
+
+            $this->update(['academic_level_id' => $toId]);
+
+            // Notify student and primary parent if any
+            try {
+                $this->user?->notify(new StudentPromotedToNextLevel($this, $promotion));
+                $primary = $this->parents()->wherePivot('is_primary_contact', true)->first();
+                if ($primary) {
+                    $primary->user?->notify(new StudentPromotedToNextLevel($this, $promotion));
+                }
+            } catch (\Exception $e) {
+                // Logging the notification failure might be useful, but do not rollback the transaction
+            }
+
+            return $promotion;
+        });
     }
 
 }

@@ -11,6 +11,13 @@
   - Fixed instructor resource query to properly scope uploads by course and avoid query leaks
   - Added comprehensive tests for both upload flows
 
+### Added
+- **Student Promotion**: Add single-level promotion flow for students (Admin + parent)
+  - Add `student_promotions` table for promotion audit logs
+  - Add `StudentPromotion` model and `Student::promoteToNextLevel()` helper
+  - Add `Promote` action to Admin & Parent Filament resources
+  - Adds notifications to student & parent upon promotion
+
 ## [v12.1.0](https://github.com/laravel/laravel/compare/v12.0.11...v12.1.0) - 2025-07-03
 
 * [12.x] Disable nightwatch in testing by [@laserhybiz](https://github.com/laserhybiz) in https://github.com/laravel/laravel/pull/6632
