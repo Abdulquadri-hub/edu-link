@@ -2,11 +2,12 @@
 
 namespace App\Filament\Student\Resources\MyEnrollments;
 
-use App\Models\Enrollment;
-use Filament\Resources\Resource;
-use Filament\Tables\Table;
 use BackedEnum;
-use Filament\Resources\Pages\ListRecords;
+use App\Models\Enrollment;
+use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use App\Filament\Student\Resources\MyEnrollments\Pages\ListMyEnrollments;
+use App\Filament\Student\Resources\MyEnrollments\Tables\MyEnrollmentsTable;
 
 class MyEnrollmentsResource extends Resource
 {
@@ -21,13 +22,13 @@ class MyEnrollmentsResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return (new \App\Filament\Student\Resources\MyEnrollments\Tables\MyEnrollmentsTable)::configure($table);
+        return (new MyEnrollmentsTable)::configure($table);
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => ListRecords::route('/'),
+            'index' => ListMyEnrollments::route('/'),
         ];
     }
 }
