@@ -4,17 +4,25 @@ namespace App\Models;
 
 use App\Models\Student;
 use App\Models\ParentModel;
+use App\Models\Course;
+use App\Models\Assignment;
+use App\Models\Submission;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ParentAssignment extends Model
 {
+    use SoftDeletes;
+
+    protected $table = 'parent_assignments';
 
     protected $fillable = [
         'parent_id',
         'student_id',
         'assignment_id',
         'submission_id',
+        'course_id',
         'parent_notes',
         'attachments',
         'status',
@@ -40,6 +48,11 @@ class ParentAssignment extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class);
     }
 
     public function assignment(): BelongsTo
@@ -81,15 +94,19 @@ class ParentAssignment extends Model
     // Helper Methods
     public function submitToInstructor(): bool
     {
+        if (empty($this->assignment_id)) {
+            throw new \Exception('Cannot submit to instructor without an assignment_id');
+        }
+
         $submission = Submission::create([
-            'assignment_id' => $this->assignment_id ?? null,
+            'assignment_id' => $this->assignment_id,
             'student_id' => $this->student_id,
             'content' => $this->parent_notes ?? 'Submitted by parent',
             'attachments' => $this->attachments,
             'submitted_at' => now(),
             'status' => 'submitted',
             'attempt_number' => 1,
-            'is_late' => $this->assignment->due_at->isPast(),
+            'is_late' => $this->assignment?->due_at?->isPast() ?? false,
         ]);
 
         $this->update([
@@ -127,6 +144,7 @@ class ParentAssignment extends Model
             'pending' => 'warning',
             'submitted' => 'info',
             'graded' => 'success',
+            'teach' => 'primary',
             default => 'gray',
         };
     }
@@ -137,8 +155,9 @@ class ParentAssignment extends Model
             'pending' => 'Not yet submitted',
             'submitted' => 'Submitted to instructor',
             'graded' => 'Graded',
+            'teach' => 'Upload for instructor to teach',
             default => 'Unknown',
         };
     }
-
 }
+

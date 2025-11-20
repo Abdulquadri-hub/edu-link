@@ -2,6 +2,15 @@
 
 ## [Unreleased](https://github.com/laravel/laravel/compare/v12.1.0...12.x)
 
+### Fixed
+- **Parent Assignment Dual Flow**: Fixed parent assignment upload system to properly support both "teach" (instructor teaching material) and "submit for grading" (student submission) flows
+  - Renamed database table `parent_assginments` → `parent_assignments` for consistency
+  - Added `course_id` field to parent_assignments table for tracking teaching material uploads
+  - Updated `ParentAssignment` model with SoftDeletes, course relation, and guards on `submitToInstructor()`
+  - Enhanced Filament parent form to show course selection when uploading teaching material (no assignment)
+  - Fixed instructor resource query to properly scope uploads by course and avoid query leaks
+  - Added comprehensive tests for both upload flows
+
 ## [v12.1.0](https://github.com/laravel/laravel/compare/v12.0.11...v12.1.0) - 2025-07-03
 
 * [12.x] Disable nightwatch in testing by [@laserhybiz](https://github.com/laserhybiz) in https://github.com/laravel/laravel/pull/6632

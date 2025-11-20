@@ -35,14 +35,23 @@ class ParentUploadedAssignmentResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $instructor = Auth::user()->instructor;
+        $instructorId = $instructor->id;
         
         return parent::getEloquentQuery()
-            ->whereHas('assignment.course.instructors', function ($query) use ($instructor) {
-                $query->where('instructor_course.instructor_id', $instructor->id);
+            ->where(function (Builder $query) use ($instructorId) {
+                // Show uploads related to assignments in the instructor's courses
+                $query->whereHas('assignment.course.instructors', function ($q) use ($instructorId) {
+                    $q->where('instructor_course.instructor_id', $instructorId);
+                    $q->where('instructors.deleted_at', null);
+                })
+                // OR show uploads related to courses taught by the instructor (for 'teach' status uploads)
+                ->orWhereHas('course.instructors', function ($q) use ($instructorId) {
+                    $q->where('instructor_course.instructor_id', $instructorId);
+                    $q->where('instructors.deleted_at', null);
+                });
             })
-            ->where('status', '!=', 'pending') 
-            ->orWhere('status', 'teach')
-            ->with(['student.user', 'parent.user', 'assignment.course', 'submission.grade']);
+            ->whereIn('status', ['submitted', 'teach', 'graded'])
+            ->with(['student.user', 'parent.user', 'assignment.course', 'course', 'submission.grade']);
     }
 
     public static function canCreate(): bool

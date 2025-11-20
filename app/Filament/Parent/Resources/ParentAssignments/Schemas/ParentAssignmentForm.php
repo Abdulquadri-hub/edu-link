@@ -3,6 +3,7 @@
 namespace App\Filament\Parent\Resources\ParentAssignments\Schemas;
 
 use App\Models\Student;
+use App\Models\Course;
 use App\Models\Assignment;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
@@ -67,11 +68,32 @@ class ParentAssignmentForm
                                             });
                                     });
                             })
-                            // ->required()
                             ->searchable()
                             ->reactive()
                             ->helperText('Only assignments that haven\'t been submitted yet')
                             ->disabled(fn (callable $get) => !$get('student_id')),
+
+                        Select::make('course_id')
+                            ->label('Select Course (for teaching material)')
+                            ->options(function (callable $get) {
+                                $studentId = $get('student_id');
+                                
+                                if (!$studentId) {
+                                    return [];
+                                }
+                                
+                                $student = Student::find($studentId);
+                                
+                                return $student->courses()
+                                    ->where('enrollments.status', 'active')
+                                    ->get()
+                                    ->pluck('title', 'id');
+                            })
+                            ->searchable()
+                            ->reactive()
+                            ->helperText('Select a course if uploading material for the instructor to teach (leave empty when submitting an assignment)')
+                            ->disabled(fn (callable $get) => !$get('student_id'))
+                            ->visible(fn (callable $get) => empty($get('assignment_id'))),
                         
                         TextEntry::make('assignment_info')
                             ->label('Assignment Information')

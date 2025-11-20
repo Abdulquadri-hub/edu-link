@@ -14,9 +14,16 @@ class CreateParentAssignment extends CreateRecord
     {
         $data['parent_id'] = Auth::user()->parent->id;
         $data['uploaded_at'] = now();
-        if(empty($data['assignment_id'])) {
+        
+        // Determine status: 'teach' if uploading for course (no assignment), otherwise 'pending' for assignment submission
+        if (!empty($data['assignment_id'])) {
+            $data['status'] = 'pending';
+        } elseif (!empty($data['course_id'])) {
             $data['status'] = 'teach';
+        } else {
+            $data['status'] = 'pending';
         }
+        
         return $data;
     }
 

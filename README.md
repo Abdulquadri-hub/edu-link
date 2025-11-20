@@ -7,6 +7,17 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## About School LMS
+
+School LMS is a Laravel-powered learning management system designed to facilitate school operations. It provides a comprehensive platform for managing courses, assignments, grades, and communications between instructors, students, and parents.
+
+### Features
+- **Course Management**: Create and manage courses with academic levels
+- **Assignment Handling**: Instructors can create assignments; students and parents can submit work
+- **Parent Uploads**: Parents can upload teaching material for instructors and submit student assignments for grading
+- **Grade Tracking**: Detailed grading and progress tracking for students
+- **Role-Based Access**: Separate dashboards for Admin, Instructors, Students, and Parents
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
