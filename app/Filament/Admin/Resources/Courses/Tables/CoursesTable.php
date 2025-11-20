@@ -89,7 +89,7 @@ class CoursesTable
                 SelectFilter::make('category'),
                 SelectFilter::make('level'),
                 SelectFilter::make('status'),
-                TrashedFilter::make()
+                // TrashedFilter::make()
             ])
             ->recordActions([
                 EditAction::make(),

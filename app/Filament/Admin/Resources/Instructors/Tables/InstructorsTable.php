@@ -75,7 +75,7 @@ class InstructorsTable
                         'part-time' => 'Part Time',
                         'contract' => 'Contract',
                     ]),
-                TrashedFilter::make(),
+                // TrashedFilter::make(),
             ])
             ->recordActions([
                 ViewAction::make(),
