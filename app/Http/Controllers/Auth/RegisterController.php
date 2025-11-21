@@ -44,16 +44,11 @@ class RegisterController extends Controller
 
                 Auth::login($profile->user);
 
-                // Send welcome email
-                // $this->sendWelcomeEmail($user, $role);
-
                 return redirect()->route('register.success')->with([
                     'success' => true,
                     'message' => 'Registration successful! Please check your email to verify your account.',
                     'email' => $data['email']
                 ]);
-
-                // return redirect()->route('verification.notice')->with('status', 'Registration successful! Please check your email to verify your account.');
             });
 
         } catch (\Exception $e) {

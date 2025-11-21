@@ -1,11 +1,15 @@
 <?php
 
 namespace App\Http\Controllers\Auth;
+use Inertia\Inertia;
+use Illuminate\Http\Request;
+use App\Mail\WelcomeParentMail;
+use App\Mail\WelcomeStudentMail;
+use App\Mail\WelcomeInstructorMail;
 use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class VerificationController extends Controller
 {
@@ -24,6 +28,9 @@ class VerificationController extends Controller
 
         if ($request->user()->markEmailAsVerified()) {
             event(new Verified($request->user()));
+
+            // Send welcome email
+            $this->sendWelcomeEmail($request->user());
         }
 
         return $this->redirectBasedOnRole($request->user())
@@ -43,12 +50,24 @@ class VerificationController extends Controller
 
     protected function redirectBasedOnRole($user)
     {
-        return match($user->role) {
+        return match($user->user_type) {
             'admin' => redirect()->intended('/admin'),
             'instructor' => redirect()->intended('/instructor'),
             'student' => redirect()->intended('/student'),
             'parent' => redirect()->intended('/parent'),
             default => redirect()->intended('/'),
         };
+    }
+
+    private function sendWelcomeEmail($user)
+    {
+        $role = $user->user_type;
+        $emailClass = match($role) {
+            'student' => WelcomeStudentMail::class,
+            'parent' => WelcomeParentMail::class,
+            'instructor' => WelcomeInstructorMail::class,
+        };
+
+        Mail::to($user->user->email)->send(new $emailClass($user));
     }
 }

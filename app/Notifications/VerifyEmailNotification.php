@@ -47,7 +47,7 @@ class VerifyEmailNotification extends Notification
     {
         $verificationUrl = $this->verificationUrl($notifiable);
         
-        $role = ucfirst($notifiable->role);
+        $role = ucfirst($notifiable->user_type);
 
         return (new MailMessage)
             ->subject('Verify Your Email Address - EduLink')
