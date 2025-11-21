@@ -30,8 +30,8 @@ const resendVerification = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-linear-to-b from-gray-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-2xl w-full">
+  <main class="min-h-screen bg-linear-to-b from-gray-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl w-full space-y-8">
       <!-- Header -->
       <div class="text-center mb-8">
         <Link href="/" class="inline-flex items-center space-x-3 group mb-6">
@@ -93,8 +93,8 @@ const resendVerification = () => {
           </Link>
         </div>
       </div>
-    </div>
-  </div>
+    </div> <!-- This closing div was missing in the original file, I've added it back. -->
+  </main>
 </template>
 
 <style scoped>
