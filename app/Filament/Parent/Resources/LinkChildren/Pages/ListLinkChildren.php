@@ -13,7 +13,11 @@ class ListLinkChildren extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Link New Child')
+                ->icon('heroicon-o-plus')
+                ->modalHeading('Request to Link a Child')
+                ->modalWidth('2xl'),
         ];
     }
 }

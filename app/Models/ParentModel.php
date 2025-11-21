@@ -54,6 +54,38 @@ class ParentModel extends Model
         return $this->parentAssignments()->where('status', 'pending');
     }
 
+    // NEW: Child Linking Requests
+    public function linkingRequests(): HasMany
+    {
+        return $this->hasMany(ChildLinkingRequest::class, 'parent_id');
+    }
+
+    public function pendingLinkingRequests(): HasMany
+    {
+        return $this->linkingRequests()->where('status', 'pending');
+    }
+
+    public function approvedLinkingRequests(): HasMany
+    {
+        return $this->linkingRequests()->where('status', 'approved');
+    }
+
+    // NEW: Helper to check if linking request exists
+    public function hasLinkingRequestFor(int $studentId): bool
+    {
+        return $this->linkingRequests()
+            ->where('student_id', $studentId)
+            ->where('status', 'pending')
+            ->exists();
+    }
+
+    // NEW: Get pending requests count
+    public function getPendingLinkingRequestsCount(): int
+    {
+        return $this->pendingLinkingRequests()->count();
+    }
+
+
     // Accessors / Mutators
 
     public function getFullAddressAttribute(): string {

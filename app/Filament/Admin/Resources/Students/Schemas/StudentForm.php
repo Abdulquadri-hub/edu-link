@@ -24,6 +24,7 @@ class StudentForm
                         Select::make('user_id')
                             ->relationship('user', 'email',
                                fn ($query) => $query->where('user_type', 'student')
+                                ->whereDoesntHave('student')
                             )
                             ->required()
                             ->searchable()

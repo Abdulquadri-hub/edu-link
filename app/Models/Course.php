@@ -109,4 +109,74 @@ class Course extends Model
     {
         return $this->academicLevel?->grade_number === $gradeNumber;
     }
+
+    // NEW: Enrollment Requests
+    public function enrollmentRequests(): HasMany
+    {
+        return $this->hasMany(EnrollmentRequest::class);
+    }
+
+    public function pendingEnrollmentRequests(): HasMany
+    {
+        return $this->enrollmentRequests()->where('status', 'pending');
+    }
+
+    public function activeEnrollmentRequests(): HasMany
+    {
+        return $this->enrollmentRequests()->whereIn('status', ['pending', 'parent_notified', 'payment_pending']);
+    }
+
+    // NEW: Get enrollment requests count
+    public function getPendingEnrollmentRequestsCount(): int
+    {
+        return $this->pendingEnrollmentRequests()->count();
+    }
+
+    // NEW: Check if course is full
+    public function isFull(): bool
+    {
+        if (!$this->max_students) return false;
+        
+        return $this->activeEnrollments()->count() >= $this->max_students;
+    }
+
+    // NEW: Get available spots
+    public function getAvailableSpots(): ?int
+    {
+        if (!$this->max_students) return null; // Unlimited
+        
+        $current = $this->activeEnrollments()->count();
+        return max(0, $this->max_students - $current);
+    }
+
+    // NEW: Check if student can enroll
+    public function canStudentEnroll(Student $student): array
+    {
+        // Check if already enrolled
+        if ($this->students()->where('student_id', $student->id)->exists()) {
+            return ['can_enroll' => false, 'reason' => 'Already enrolled'];
+        }
+
+        // Check pending requests
+        if ($this->enrollmentRequests()
+                ->where('student_id', $student->id)
+                ->whereIn('status', ['pending', 'parent_notified', 'payment_pending'])
+                ->exists()) {
+            return ['can_enroll' => false, 'reason' => 'Request already pending'];
+        }
+
+        // Check if course is full
+        if ($this->isFull()) {
+            return ['can_enroll' => false, 'reason' => 'Course is full'];
+        }
+
+        // Check grade level match
+        if ($this->academic_level_id && $student->academic_level_id) {
+            if ($this->academic_level_id !== $student->academic_level_id) {
+                return ['can_enroll' => false, 'reason' => 'Grade level mismatch'];
+            }
+        }
+
+        return ['can_enroll' => true, 'reason' => null];
+    }
 }

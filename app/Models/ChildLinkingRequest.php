@@ -77,7 +77,7 @@ class ChildLinkingRequest extends Model
     public function approve(int $adminUserId, ?string $notes = null): bool
     {
         // Check if already linked
-        if ($this->parent->children()->where('student_id', $this->student_id)->exists()) {
+        if ($this->parent->children()->where('student_parent.student_id', $this->student_id)->exists()) {
             $this->update([
                 'status' => 'rejected',
                 'admin_notes' => 'Already linked',
