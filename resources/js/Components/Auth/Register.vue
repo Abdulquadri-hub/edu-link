@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Link } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
@@ -99,6 +99,54 @@ const passwordsMatch = computed(() => {
     return formData.value.password && formData.value.password === formData.value.password_confirmation;
 })
 
+// Phone validation util
+import { validatePhone } from '../../Utils/phoneValidator';
+
+// Client-side phone validations (CA + GB)
+const phoneValidation = computed(() => validatePhone(formData.value.phone));
+const emergencyPhoneValidation = computed(() => validatePhone(formData.value.emergency_contact_phone));
+const secondaryPhoneValidation = computed(() => validatePhone(formData.value.secondary_phone));
+
+const phoneError = computed(() => {
+  if (!formData.value.phone) return '';
+  return phoneValidation.value.isValid ? '' : 'Phone must be a valid Canada or UK number';
+});
+
+const emergencyPhoneError = computed(() => {
+  if (!formData.value.emergency_contact_phone) return '';
+  return emergencyPhoneValidation.value.isValid ? '' : 'Emergency contact phone must be a valid Canada or UK number';
+});
+
+const secondaryPhoneError = computed(() => {
+  if (!formData.value.secondary_phone) return '';
+  return secondaryPhoneValidation.value.isValid ? '' : 'Secondary phone must be a valid Canada or UK number';
+});
+
+// Watchers to add inline form errors to the errors object (so server-side messages do not clash)
+watch(phoneError, (val) => {
+  if (val) {
+    errors.value.phone = val;
+  } else {
+    if (errors.value.phone) delete errors.value.phone;
+  }
+});
+
+watch(emergencyPhoneError, (val) => {
+  if (val) {
+    errors.value.emergency_contact_phone = val;
+  } else {
+    if (errors.value.emergency_contact_phone) delete errors.value.emergency_contact_phone;
+  }
+});
+
+watch(secondaryPhoneError, (val) => {
+  if (val) {
+    errors.value.secondary_phone = val;
+  } else {
+    if (errors.value.secondary_phone) delete errors.value.secondary_phone;
+  }
+});
+
 // Password strenght
 const passwordStrength = computed(() => {
   const password = formData.value.password;
@@ -131,15 +179,16 @@ const canProceedToNextStep = computed(() => {
            formData.value.password &&
            formData.value.password_confirmation &&
            passwordsMatch.value &&
-           formData.value.agrees_to_terms;
+         formData.value.agrees_to_terms &&
+         (formData.value.phone ? phoneValidation.value.isValid : true);
     }
 
     if (currentStep.value === 3) {
       if (formData.value.role === 'student') {
-        return formData.value.date_of_birth && formData.value.gender;
+        return formData.value.date_of_birth && formData.value.gender && (formData.value.emergency_contact_phone ? emergencyPhoneValidation.value.isValid : true);
       }
       if (formData.value.role === 'parent') {
-        return formData.value.relationship;
+        return formData.value.relationship && (formData.value.secondary_phone ? secondaryPhoneValidation.value.isValid : true);
       }
       if (formData.value.role === 'instructor') {
         return formData.value.qualification;
