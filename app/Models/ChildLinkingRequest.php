@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Events\ChildLinkingApproved;
 
+use App\Events\ChildLinkingRejected;
+use Illuminate\Database\Eloquent\Model;
+use App\Events\ChildLinkingRequestCreated;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ChildLinkingRequest extends Model
@@ -30,6 +33,15 @@ class ChildLinkingRequest extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($request) {
+            event(new ChildLinkingRequestCreated($request));
+        });
+    }
 
     // Relationships
     public function parent(): BelongsTo
@@ -103,8 +115,8 @@ class ChildLinkingRequest extends Model
             'reviewed_at' => now(),
         ]);
 
-        // TODO: Send notification to parent
-        // event(new ChildLinkingApproved($this));
+
+        event(new ChildLinkingApproved($this));
 
         return true;
     }
@@ -119,7 +131,7 @@ class ChildLinkingRequest extends Model
         ]);
 
         // TODO: Send notification to parent
-        // event(new ChildLinkingRejected($this));
+        event(new ChildLinkingRejected($this));
     }
 
     public function isPending(): bool

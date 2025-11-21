@@ -27,4 +27,8 @@ return function (Schedule $schedule) {
         ->dailyAt('17:00')
         ->description('Remind instructors about pending grading');
 
+    $schedule->command('subscriptions:check-expiry')
+        ->daily()
+        ->at('00:00');
+
 };

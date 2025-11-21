@@ -4,40 +4,30 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use App\Models\ParentAssignment;
+use Filament\Actions\Action;
+use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 use Filament\Notifications\Notification as FilamentNotification;
 use Filament\Actions\Action as FilamentAction;
 
-class ParentUploadAssignmentNotification extends Notification
+class ParentAssignmentSubmittedNotification extends Notification
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
     public function __construct(
         public ParentAssignment $parentAssignment
     ) {}
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
+    public function via($notifiable): array
     {
         return ['database', 'mail'];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
+    public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Parent Uploaded Assignment')
+            ->subject('New Parent Assignment Upload')
             ->line("{$this->parentAssignment->parent->user->full_name} has uploaded an assignment.")
             ->line("Student: {$this->parentAssignment->student->user->full_name}")
             ->line("Assignment: {$this->parentAssignment->assignment->title}")
@@ -45,12 +35,8 @@ class ParentUploadAssignmentNotification extends Notification
             ->action('View Assignment', route('filament.instructor.resources.parent-uploaded-assignments.view', $this->parentAssignment->id));
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
+    
+    public function toArray($notifiable): array
     {
         return FilamentNotification::make()
             ->title('Parent Uploaded Assignment')

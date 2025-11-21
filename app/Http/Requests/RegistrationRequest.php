@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
+use App\Rules\PhoneAllowedCountries;
 
 class RegistrationRequest extends FormRequest
 {
@@ -28,7 +29,7 @@ class RegistrationRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:20', new PhoneAllowedCountries(['CA','GB'])],
             'username' => ['required', 'string', 'max:255', 'unique:users,username', 'regex:/^[a-zA-Z0-9_]+$/'],
             'password' => ['required', 'string', 'confirmed', Password::min(8)
                 ->mixedCase()
@@ -62,7 +63,7 @@ class RegistrationRequest extends FormRequest
             'state' => ['nullable', 'string', 'max:255'],
             'country' => ['nullable', 'string', 'max:255'],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
-            'emergency_contact_phone' => ['nullable', 'string', 'max:20'],
+            'emergency_contact_phone' => ['nullable', 'string', 'max:20', new PhoneAllowedCountries(['CA','GB'])],
         ];
     }
 
@@ -74,7 +75,7 @@ class RegistrationRequest extends FormRequest
         return [
             'occupation' => ['nullable', 'string', 'max:255'],
             'relationship' => ['required', 'string', 'in:father,mother,guardian,other'],
-            'secondary_phone' => ['nullable', 'string', 'max:20'],
+            'secondary_phone' => ['nullable', 'string', 'max:20', new PhoneAllowedCountries(['CA','GB'])],
             'address' => ['nullable', 'string', 'max:500'],
             'city' => ['nullable', 'string', 'max:255'],
             'state' => ['nullable', 'string', 'max:255'],

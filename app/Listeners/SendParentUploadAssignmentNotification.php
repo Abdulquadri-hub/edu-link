@@ -3,10 +3,11 @@
 namespace App\Listeners;
 
 use App\Events\ParentUploadAssignment;
+use App\Notifications\ParentUploadAssignmentNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
-class SendParentUploadAssignmentNotification
+class SendParentUploadAssignmentNotification implements ShouldQueue
 {
     /**
      * Create the event listener.
@@ -23,14 +24,15 @@ class SendParentUploadAssignmentNotification
     {
         $parentAssignment = $event->parentAssignment;
 
-        /**
-         * when parent upload assignment and status === teach notify instructor that the assignment is given to the child from school and need his attention to do it or teach in class this can be know from the notes or not.
-         * When parent upload and the status === submitted notify instuctor to grade the assignment.
-         * get the uploaded assignment by parent
-         * get instructor from parent->student->instructor()->user->notify()
-         */
+        // Preferably notify all instructors attached to the assignment's course
+        $instructors = $parentAssignment->assignment?->course?->instructors ?? [];
 
-        // $instructor = $parentAssignment->
+        foreach ($instructors as $instructor) {
+            // Ensure the instructor has a user record with proper notification routing
+            if (!empty($instructor->user)) {
+                $instructor->user->notify(new ParentUploadAssignmentNotification($parentAssignment));
+            }
+        }
     }
 }
 

@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
+use App\Events\PaymentRejected;
+use App\Events\PaymentVerified;
+use App\Events\PaymentReceiptUploaded;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
@@ -48,6 +51,10 @@ class Payment extends Model
             if (empty($payment->payment_reference)) {
                 $payment->payment_reference = self::generatePaymentReference();
             }
+        });
+
+        static::created(function ($payment) {
+            event(new PaymentReceiptUploaded($payment));
         });
     }
 
@@ -123,7 +130,7 @@ class Payment extends Model
         ]);
 
         // TODO: Send notification to parent
-        // event(new PaymentVerified($this));
+        event(new PaymentVerified($this));
 
         return true;
     }
@@ -138,7 +145,7 @@ class Payment extends Model
         ]);
 
         // TODO: Send notification to parent
-        // event(new PaymentRejected($this));
+        event(new PaymentRejected($this));
     }
 
     public function isPending(): bool

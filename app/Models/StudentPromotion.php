@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
+use App\Events\StudentPromoted;
+use App\Events\PromotionRejected;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -151,8 +153,7 @@ class StudentPromotion extends Model
             'approved_at' => now(),
         ]);
 
-        // TODO: Send notification to promoter
-        // $this->promoter->notify(new PromotionRejected($this));
+        event(new PromotionRejected($this));
     }
 
     public function execute(): bool
@@ -170,11 +171,7 @@ class StudentPromotion extends Model
             $this->updateEnrollments();
         }
 
-        // TODO: Send notification to student and parents
-        // $this->student->user->notify(new StudentPromoted($this));
-        // foreach ($this->student->parents as $parent) {
-        //     $parent->user->notify(new StudentPromoted($this));
-        // }
+        event(new StudentPromoted($this));
 
         return true;
     }

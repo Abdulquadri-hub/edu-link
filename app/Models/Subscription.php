@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use App\Events\SubscriptionCreated;
+use App\Events\SubscriptionExpired;
+use App\Events\SubscriptionExpiring;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -60,6 +63,10 @@ class Subscription extends Model
             if (empty($subscription->sessions_remaining)) {
                 $subscription->sessions_remaining = $subscription->total_sessions;
             }
+        });
+
+        static::created(function ($subscription) {
+            event(new SubscriptionCreated($subscription));
         });
     }
 
@@ -149,6 +156,15 @@ class Subscription extends Model
     {
         if ($this->end_date->isPast() && $this->status === 'active') {
             $this->markAsExpired('Subscription period ended');
+            event(new SubscriptionExpired($this));
+        }
+    }
+
+    public function checkExpiryWarning(int $daysWarning = 7): void
+    {
+        if ($this->isExpiringSoon($daysWarning) && $this->status === 'active') {
+            $daysRemaining = $this->end_date->diffInDays(now());
+            event(new SubscriptionExpiring($this, $daysRemaining));
         }
     }
 

@@ -71,7 +71,7 @@ class ChildPromotionsTable
                     ->relationship('student', 'student_id', function ($query) {
                         $parent = Auth::user()->parent;
                         $query->whereHas('parents', function ($q) use ($parent) {
-                            $q->where('parent_id', $parent->id);
+                            $q->where('student_parent.parent_id', $parent->id);
                         });
                     })
                     ->searchable()

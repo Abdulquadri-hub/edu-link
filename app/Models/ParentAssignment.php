@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Student;
 use App\Models\ParentModel;
 use Illuminate\Database\Eloquent\Model;
+use App\Events\ParentAssignmentSubmitted;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ParentAssignment extends Model
@@ -97,6 +98,8 @@ class ParentAssignment extends Model
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
+
+        event(new ParentAssignmentSubmitted($this));
 
         return true;
     }

@@ -3,7 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
+use App\Events\EnrollmentApproved;
+use App\Events\EnrollmentRejected;
 use Illuminate\Database\Eloquent\Model;
+use App\Events\EnrollmentRequestCreated;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -131,11 +134,7 @@ class EnrollmentRequest extends Model
     {
         $this->update(['status' => 'parent_notified']);
         
-        // TODO: Send notification to all parents
-        // $student = $this->student;
-        // foreach ($student->parents as $parent) {
-        //     $parent->user->notify(new EnrollmentRequestCreated($this));
-        // }
+        event(new EnrollmentRequestCreated($this));
     }
 
     public function markPaymentPending(): void
@@ -174,7 +173,7 @@ class EnrollmentRequest extends Model
         ]);
 
         // TODO: Send notification to student and parents
-        // $this->student->user->notify(new EnrollmentApproved($this));
+       event(new EnrollmentApproved($this));
 
         return true;
     }
@@ -189,7 +188,7 @@ class EnrollmentRequest extends Model
         ]);
 
         // TODO: Send notification to student
-        // $this->student->user->notify(new EnrollmentRejected($this));
+        event(new EnrollmentRejected($this));
     }
 
     public function cancel(): void
