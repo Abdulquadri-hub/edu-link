@@ -6,7 +6,6 @@ use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
 use Filament\Schemas\Schema;
-use App\Models\ChildPromotion;
 use App\Models\StudentPromotion;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
