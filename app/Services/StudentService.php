@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Notifications\NewStudentWelcomeNotification;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Contracts\Services\StudentServiceInterface;
@@ -29,10 +29,7 @@ class StudentService implements StudentServiceInterface
 
     public function createStudent(array $data)
     {
-        // Store the temporary password before hashing
-        $tempPassword = $data['password'];
-
-        $student = DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data) {
             $user = User::create([
                 'email' => $data['email'],
                 'username' => $data['username'],
@@ -41,8 +38,8 @@ class StudentService implements StudentServiceInterface
                 'last_name' => $data['last_name'],
                 'phone' => $data['phone'] ?? null,
                 'user_type' => 'student',
-                'status' => 'unverified', // Set status to unverified for email verification
-                'email_verified_at' => null, // Ensure email is unverified
+                'status' => $data['status'] ?? 'active', // Use provided status or default to active
+                'email_verified_at' => $data['email_verified_at'] ?? now(), // Use provided status or default to verified
             ]);
 
             // Create student profile
@@ -58,18 +55,11 @@ class StudentService implements StudentServiceInterface
                 'emergency_contact_name' => $data['emergency_contact_name'] ?? null,
                 'emergency_contact_phone' => $data['emergency_contact_phone'] ?? null,
                 'enrollment_date' => now(),
-                'enrollment_status' => $data['enrollment_status'] ?? 'pending', // Use provided status or default to pending
+                'enrollment_status' => $data['enrollment_status'] ?? 'active', // Use provided status or default to active
             ]);
             
             return $student;
         });
-
-        // Dispatch welcome notification with verification link and temporary password
-        if ($student->user->email) {
-            $student->user->notify(new NewStudentWelcomeNotification($student->user, $tempPassword));
-        }
-
-        return $student;
     }
 
     public function updateStudent(int $id, array $data)

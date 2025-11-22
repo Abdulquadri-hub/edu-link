@@ -4,6 +4,7 @@ namespace App\Filament\Parent\Resources\LinkChildren\Pages;
 
 use App\Models\ChildLinkingRequest;
 use App\Services\StudentService;
+use App\Notifications\NewStudentWelcomeNotification;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
@@ -36,7 +37,8 @@ class CreateLinkChild extends CreateRecord
                     'password' => $tempPassword, // Pass temporary password
                     'date_of_birth' => $data['new_student_dob'],
                     'gender' => 'other', // Default gender to 'other'
-                    'status' => 'pending', // Set user status to pending
+                    'status' => 'unverified', // Set user status to unverified for email verification
+                    'email_verified_at' => null, // Ensure email is unverified
                     'enrollment_status' => 'pending', // Set student enrollment status to pending
                     
                     // New fields from the form
@@ -51,8 +53,10 @@ class CreateLinkChild extends CreateRecord
 
                 $student = $studentService->createStudent($studentData);
                 
-                // Store temporary password for notification
-                session(['new_student_temp_password' => $tempPassword]);
+                // Dispatch welcome notification with verification link and temporary password
+                if ($student->user->email) {
+                    $student->user->notify(new NewStudentWelcomeNotification($student->user, $tempPassword));
+                }
 
                 // 2. Set the newly created student's ID for the linking request
                 $data['student_id'] = $student->id;
