@@ -62,12 +62,15 @@ class VerificationController extends Controller
     private function sendWelcomeEmail($user)
     {
         $role = $user->user_type;
-        $emailClass = match($role) {
+        $emailClass = match ($role) {
             'student' => WelcomeStudentMail::class,
             'parent' => WelcomeParentMail::class,
             'instructor' => WelcomeInstructorMail::class,
+            default => null,
         };
 
-        Mail::to($user->email)->send(new $emailClass($user));
+        if ($emailClass) {
+            Mail::to($user->email)->send(new $emailClass($user));
+        }
     }
 }

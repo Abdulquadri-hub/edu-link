@@ -10,7 +10,7 @@ Your account has been successfully created and you can now:
 - Submit assignments and track your grades
 - View your progress dashboard
 
-@component('mail::button', ['url' => url('/student/dashboard')])
+@component('mail::button', ['url' => url('/student/login')])
 Go to Dashboard
 @endcomponent
 

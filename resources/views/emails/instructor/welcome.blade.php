@@ -21,7 +21,7 @@ As an instructor, you can:
 - Upload course materials
 - Track student progress
 
-@component('mail::button', ['url' => url('/instructor/dashboard')])
+@component('mail::button', ['url' => url('/instructor/login')])
 Login to Instructor Portal
 @endcomponent
 
