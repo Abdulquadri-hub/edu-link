@@ -25,19 +25,19 @@ class CreateLinkChild extends CreateRecord
             try {
                 $studentService = app(StudentService::class);
                 
-                $tempPassword = Str::random(10); // Temporary password
+                $tempPassword = Str::random(10); 
 
                 $studentData = [
                     'first_name' => $data['new_student_first_name'],
                     'last_name' => $data['new_student_last_name'],
                     'email' => $data['new_student_email'] ?? null,
-                    'username' => $data['new_student_email'] ? str_replace('@', '_', $data['new_student_email']) : Str::lower(Str::random(10)),
+                    'username' => $data['new_student_email'] ? str_replace('@gmai.com', '', $data['new_student_email']) : Str::lower(Str::random(10)),
 	                'password' => $tempPassword, 
 	                'date_of_birth' => $data['new_student_dob'],
-	                'gender' => 'other', 
-	                'status' => 'unverified',
+	                'gender' => $data['new_student_gender'], 
+	                'status' => 'active',
 	                'email_verified_at' => null, 
-                    'enrollment_status' => 'pending', 
+                    'enrollment_status' => 'active', 
                     'phone' => $data['new_student_phone'] ?? 'N/A',
                     'address' => $data['new_student_address'],
                     'city' => $data['new_student_city'],

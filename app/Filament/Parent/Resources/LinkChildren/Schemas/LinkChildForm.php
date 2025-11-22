@@ -125,6 +125,12 @@ class LinkChildForm
                             ->email()
                             ->maxLength(255)
                             ->hidden(fn (callable $get) => !$get('is_new_student')),
+
+                        TextInput::make('new_student_gender')
+                            ->label('Child\'s Gender')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
                         
                         DatePicker::make('new_student_dob')
                             ->label('Child\'s Date of Birth')
