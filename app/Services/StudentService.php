@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Contracts\Services\StudentServiceInterface;
 use App\Contracts\Repositories\StudentRepositoryInterface;
 use App\Contracts\Repositories\EnrollmentRepositoryInterface;
+use Carbon\Carbon;
 
 class StudentService implements StudentServiceInterface
 {
@@ -94,6 +95,17 @@ class StudentService implements StudentServiceInterface
             'recent_grades' => $this->studentRepo->getRecentGrades($studentId, 5),
             'progress' => $this->getStudentProgress($studentId),
         ];
+    }
+
+    public function isMinor(int $studentId): bool
+    {
+        $student = $this->studentRepo->find($studentId);
+        if (!$student || !$student->date_of_birth) {
+            // Default to adult if DOB is missing, or handle as an error case
+            return false;
+        }
+
+        return Carbon::parse($student->date_of_birth)->age < 18;
     }
 
     public function getUpcomingClasses(int $studentId)
