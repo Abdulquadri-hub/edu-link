@@ -4,6 +4,7 @@ namespace App\Filament\Parent\Resources\LinkChildren\Pages;
 
 use App\Models\ChildLinkingRequest;
 use App\Services\StudentService;
+use App\Notifications\NewStudentWelcomeNotification;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
@@ -23,27 +24,38 @@ class CreateLinkChild extends CreateRecord
         if (isset($data['is_new_student']) && $data['is_new_student']) {
             try {
                 $studentService = app(StudentService::class);
+                
+                $tempPassword = Str::random(10); // Temporary password
 
                 $studentData = [
                     'first_name' => $data['new_student_first_name'],
                     'last_name' => $data['new_student_last_name'],
                     'email' => $data['new_student_email'] ?? null,
-                    'username' => $data['new_student_email'] ? str_replace('@gmail.com', '', $data['new_student_email']) : Str::lower(Str::random(10)), 
-                    'password' => Str::random(10), 
-                    'date_of_birth' => $data['new_student_dob'],
-                    'gender' => 'other', 
-                    'enrollment_status' => 'pending', 
+
+                    'username' => $data['new_student_email'] ? str_replace('@', '_', $data['new_student_email']) : Str::lower(Str::random(10)), // Create a username
+	                    'password' => $tempPassword, // Pass temporary password
+	                    'date_of_birth' => $data['new_student_dob'],
+	                    'gender' => 'other', // Default gender to 'other'
+	                    'status' => 'unverified', // Set user status to unverified for email verification
+	                    'email_verified_at' => null, // Ensure email is unverified
+                    'enrollment_status' => 'pending', // Set student enrollment status to pending
+                    
+                    // New fields from the form
+                    'phone' => $data['new_student_phone'] ?? 'N/A',
+                    'address' => $data['new_student_address'],
+                    'city' => $data['new_student_city'],
+                    'state' => $data['new_student_state'],
+                    'country' => $data['new_student_country'],
+                    'emergency_contact_name' => $data['new_student_emergency_contact_name'],
+                    'emergency_contact_phone' => $data['new_student_emergency_contact_phone'],
                 ];
-                
-                $studentData['phone'] = 'N/A';
-                $studentData['city'] = 'N/A';
-                $studentData['state'] = 'N/A';
-                $studentData['country'] = 'N/A';
-                $studentData['emergency_contact_name'] = 'N/A';
-                $studentData['emergency_contact_phone'] = 'N/A';
-                $studentData['address'] = 'N/A';
 
                 $student = $studentService->createStudent($studentData);
+                
+                // Dispatch welcome notification with verification link and temporary password
+                if ($student->user->email) {
+                    $student->user->notify(new NewStudentWelcomeNotification($student->user, $tempPassword));
+                }
 
                 // 2. Set the newly created student's ID for the linking request
                 $data['student_id'] = $student->id;
@@ -64,6 +76,13 @@ class CreateLinkChild extends CreateRecord
                 unset($data['new_student_email']);
                 unset($data['new_student_dob']);
                 unset($data['new_student_grade_level']);
+                unset($data['new_student_phone']);
+                unset($data['new_student_address']);
+                unset($data['new_student_city']);
+                unset($data['new_student_state']);
+                unset($data['new_student_country']);
+                unset($data['new_student_emergency_contact_name']);
+                unset($data['new_student_emergency_contact_phone']);
 
             } catch (\Exception $e) {
                 Notification::make()

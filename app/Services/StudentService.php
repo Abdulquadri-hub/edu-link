@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Contracts\Services\StudentServiceInterface;
@@ -37,11 +38,12 @@ class StudentService implements StudentServiceInterface
                 'last_name' => $data['last_name'],
                 'phone' => $data['phone'] ?? null,
                 'user_type' => 'student',
-                'status' => 'active',
+                'status' => $data['status'] ?? 'active', // Use provided status or default to active
+                'email_verified_at' => $data['email_verified_at'] ?? now(), // Use provided status or default to verified
             ]);
 
             // Create student profile
-            return $this->studentRepo->create([
+            $student = $this->studentRepo->create([
                 'user_id' => $user->id,
                 'student_id' => $this->generateStudentId(),
                 'date_of_birth' => $data['date_of_birth'],
@@ -53,8 +55,10 @@ class StudentService implements StudentServiceInterface
                 'emergency_contact_name' => $data['emergency_contact_name'] ?? null,
                 'emergency_contact_phone' => $data['emergency_contact_phone'] ?? null,
                 'enrollment_date' => now(),
-                'enrollment_status' => 'active',
+                'enrollment_status' => $data['enrollment_status'] ?? 'active', // Use provided status or default to active
             ]);
+            
+            return $student;
         });
     }
 
