@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 
@@ -33,8 +36,20 @@ class LinkChildForm
         return $schema
             ->components([
                 Section::make('Child Information')
-                    ->description('Search for your child by their Student ID, name, or email')
+                    ->description(fn (callable $get) => $get('is_new_student') ? 'Enter your child\'s details for registration and linking' : 'Search for your child by their Student ID, name, or email')
                     ->schema([
+                        ToggleButtons::make('is_new_student')
+                            ->label('Child Status')
+                            ->options([
+                                false => 'Existing Student',
+                                true => 'New Student',
+                            ])
+                            ->default(false)
+                            ->inline()
+                            ->reactive()
+                            ->columnSpanFull(),
+                        
+                        // Existing Student Fields
                         Select::make('student_id')
                             ->label('Search Student')
                             ->searchable()
@@ -62,9 +77,10 @@ class LinkChildForm
                                 $student = Student::find($value);
                                 return $student ? "{$student->student_id} - {$student->user->full_name}" : '';
                             })
-                            ->required()
+                            ->required(fn (callable $get) => !$get('is_new_student'))
                             ->reactive()
-                            ->helperText('Start typing the student ID, name, or email to search'),
+                            ->helperText('Start typing the student ID, name, or email to search')
+                            ->hidden(fn (callable $get) => $get('is_new_student')),
                         
                         TextEntry::make('student_info')
                             ->label('Student Information')
@@ -88,7 +104,38 @@ class LinkChildForm
                                        "Status: {$student->enrollment_status}";
                             })
                             ->columnSpanFull()
-                            ->visible(fn (callable $get) => $get('student_id')),
+                            ->visible(fn (callable $get) => $get('student_id') && !$get('is_new_student')),
+
+                        // New Student Fields
+                        TextInput::make('new_student_first_name')
+                            ->label('Child\'s First Name')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+                        
+                        TextInput::make('new_student_last_name')
+                            ->label('Child\'s Last Name')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+                        
+                        TextInput::make('new_student_email')
+                            ->label('Child\'s Email (Optional)')
+                            ->email()
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+                        
+                        DatePicker::make('new_student_dob')
+                            ->label('Child\'s Date of Birth')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxDate(now())
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+                        
+                        TextInput::make('new_student_grade_level')
+                            ->label('Child\'s Grade Level (e.g., 5th Grade)')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
                     ])
                     ->columns(1),
                 
