@@ -31,16 +31,13 @@ class CreateLinkChild extends CreateRecord
                     'first_name' => $data['new_student_first_name'],
                     'last_name' => $data['new_student_last_name'],
                     'email' => $data['new_student_email'] ?? null,
-
-                    'username' => $data['new_student_email'] ? str_replace('@', '_', $data['new_student_email']) : Str::lower(Str::random(10)), // Create a username
-	                    'password' => $tempPassword, // Pass temporary password
-	                    'date_of_birth' => $data['new_student_dob'],
-	                    'gender' => 'other', // Default gender to 'other'
-	                    'status' => 'unverified', // Set user status to unverified for email verification
-	                    'email_verified_at' => null, // Ensure email is unverified
-                    'enrollment_status' => 'pending', // Set student enrollment status to pending
-                    
-                    // New fields from the form
+                    'username' => $data['new_student_email'] ? str_replace('@', '_', $data['new_student_email']) : Str::lower(Str::random(10)),
+	                'password' => $tempPassword, 
+	                'date_of_birth' => $data['new_student_dob'],
+	                'gender' => 'other', 
+	                'status' => 'unverified',
+	                'email_verified_at' => null, 
+                    'enrollment_status' => 'pending', 
                     'phone' => $data['new_student_phone'] ?? 'N/A',
                     'address' => $data['new_student_address'],
                     'city' => $data['new_student_city'],
@@ -52,15 +49,12 @@ class CreateLinkChild extends CreateRecord
 
                 $student = $studentService->createStudent($studentData);
                 
-                // Dispatch welcome notification with verification link and temporary password
                 if ($student->user->email) {
                     $student->user->notify(new NewStudentWelcomeNotification($student->user, $tempPassword));
                 }
 
-                // 2. Set the newly created student's ID for the linking request
                 $data['student_id'] = $student->id;
                 
-                // 3. Add new student details to the message for admin context
                 $newStudentMessage = "New Student Created:\n" .
                                      "Name: {$data['new_student_first_name']} {$data['new_student_last_name']}\n" .
                                      "DOB: {$data['new_student_dob']}\n" .
@@ -69,7 +63,6 @@ class CreateLinkChild extends CreateRecord
                 
                 $data['parent_message'] = $newStudentMessage . ($data['parent_message'] ?? '');
 
-                // 4. Clean up temporary form fields
                 unset($data['is_new_student']);
                 unset($data['new_student_first_name']);
                 unset($data['new_student_last_name']);
@@ -94,7 +87,6 @@ class CreateLinkChild extends CreateRecord
             }
         }
 
-        // Standard checks for existing student linking (also applies to newly created student)
         if ($data['student_id']) {
             if ($parent->children()->where('student_parent.student_id', $data['student_id'])->exists()) {
                 Notification::make()
@@ -132,20 +124,11 @@ class CreateLinkChild extends CreateRecord
 
     protected function getCreatedNotificationTitle(): ?string
     {
-        // The student_id will be set in $data if a new student was created, so we can't rely on $data['is_new_student'] here.
-        // We can check if any of the new student fields are present, but the safest is to check the student model after creation.
-        // Since we are in mutateFormDataBeforeCreate, we can't check the created record.
-        // I will rely on the fact that if a new student was created, the notification should be more specific.
-        // However, since the new student fields are unset, I'll stick to a generic message or find a better way.
-        // For now, I'll check if the student_id was originally null (before the mutation) but that's not possible here.
-        // I will use a session flash or a temporary property on the page class, but for simplicity, I'll use a check on the data array before unsetting.
-        // Since I'm using $data after mutation, I'll just use a generic success message.
         return 'Linking request submitted';
     }
 
     protected function getCreatedNotification(): ?Notification
     {
-        // Check if the student_id was set during the mutation (meaning a new student was created)
         $isNewStudent = Str::startsWith($this->getRecord()->student->student_id, 'TEMP-');
 
         return Notification::make()
