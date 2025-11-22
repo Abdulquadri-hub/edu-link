@@ -36,7 +36,7 @@ class LinkChildForm
         return $schema
             ->components([
                 Section::make('Child Information')
-                    ->description(fn (callable $get) => $get('is_new_student') ? 'Enter your child\'s details for registration and linking' : 'Search for your child by their Student ID, name, or email')
+                    ->description(fn (callable $get) => $get('is_new_student') ? 'Enter your child\'s details to create a new student record and link them to your account.' : 'Search for your child by their Student ID, name, or email')
                     ->schema([
                         ToggleButtons::make('is_new_student')
                             ->label('Child Status')
@@ -120,8 +120,15 @@ class LinkChildForm
                             ->hidden(fn (callable $get) => !$get('is_new_student')),
                         
                         TextInput::make('new_student_email')
-                            ->label('Child\'s Email (Optional)')
+                            ->label('Child\'s Email')
+                            ->required(fn (callable $get) => $get('is_new_student'))
                             ->email()
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+
+                        TextInput::make('new_student_gender')
+                            ->label('Child\'s Gender')
+                            ->required(fn (callable $get) => $get('is_new_student'))
                             ->maxLength(255)
                             ->hidden(fn (callable $get) => !$get('is_new_student')),
                         
@@ -133,6 +140,52 @@ class LinkChildForm
                         
                         TextInput::make('new_student_grade_level')
                             ->label('Child\'s Grade Level (e.g., 5th Grade)')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxLength(255)
+                            ->helperText('This will be used to create a placeholder student record. An admin will finalize the enrollment.')
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+
+                        // Additional Student Fields
+                        TextInput::make('new_student_phone')
+                            ->label('Child\'s Phone (Optional)')
+                            ->tel()
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+
+                        TextInput::make('new_student_address')
+                            ->label('Address')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+
+                        TextInput::make('new_student_city')
+                            ->label('City')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+
+                        TextInput::make('new_student_state')
+                            ->label('State')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+
+                        TextInput::make('new_student_country')
+                            ->label('Country')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxLength(255)
+                            ->default('Nigeria')
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+
+                        TextInput::make('new_student_emergency_contact_name')
+                            ->label('Emergency Contact Name')
+                            ->required(fn (callable $get) => $get('is_new_student'))
+                            ->maxLength(255)
+                            ->hidden(fn (callable $get) => !$get('is_new_student')),
+
+                        TextInput::make('new_student_emergency_contact_phone')
+                            ->label('Emergency Contact Phone')
+                            ->tel()
                             ->required(fn (callable $get) => $get('is_new_student'))
                             ->maxLength(255)
                             ->hidden(fn (callable $get) => !$get('is_new_student')),
