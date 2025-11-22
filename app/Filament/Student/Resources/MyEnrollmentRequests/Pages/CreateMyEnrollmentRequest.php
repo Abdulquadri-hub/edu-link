@@ -127,6 +127,3 @@ class CreateMyEnrollmentRequest extends CreateRecord
         }
     }
 }
-{
-    protected static string $resource = MyEnrollmentRequestResource::class;
-}

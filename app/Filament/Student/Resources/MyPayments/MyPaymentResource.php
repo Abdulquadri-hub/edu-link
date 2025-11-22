@@ -20,7 +20,7 @@ use App\Filament\Parent\Resources\Payments\Schemas\PaymentForm;
 use App\Filament\Parent\Resources\Payments\Tables\PaymentsTable;
 use App\Filament\Parent\Resources\Payments\Schemas\PaymentInfolist;
 
-class PaymentResource extends Resource
+class MyPaymentResource extends Resource
 {
     protected static ?string $model = Payment::class;
 
