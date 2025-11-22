@@ -11,7 +11,7 @@ As a parent, you can now:
 - Communicate with instructors
 - Stay informed about upcoming classes
 
-@component('mail::button', ['url' => url('/parent/dashboard')])
+@component('mail::button', ['url' => url('/parent')])
 Go to Dashboard
 @endcomponent
 

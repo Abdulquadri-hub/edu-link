@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('child_linking_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('parent_id')->constrained('parents')->onDelete('cascade');
-            $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
+            $table->foreignId('student_id')->nullable()->constrained('students')->onDelete('cascade');
             $table->string('relationship'); // father, mother, guardian, etc.
             $table->boolean('is_primary_contact')->default(false);
             $table->boolean('can_view_grades')->default(true);
