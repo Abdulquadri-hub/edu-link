@@ -2,14 +2,16 @@
 
 namespace App\Filament\Parent\Resources\LinkChildren\Pages;
 
-use App\Models\ChildLinkingRequest;
 use App\Models\User;
 use App\Models\Student;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use App\Models\ChildLinkingRequest;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use App\Contracts\Services\StudentServiceInterface;
 use App\Filament\Parent\Resources\LinkChildren\LinkChildResource;
 
 class CreateLinkChild extends CreateRecord
@@ -22,6 +24,8 @@ class CreateLinkChild extends CreateRecord
         $data['parent_id'] = $parent->id;
         $data['status'] = 'pending';
 
+        $studentService = app(new StudentServiceInterface);
+
         if (isset($data['is_new_student']) && $data['is_new_student']) {
             // 1. Create a new User and Student record
             DB::beginTransaction();
@@ -31,8 +35,9 @@ class CreateLinkChild extends CreateRecord
                 $user = User::create([
                     'first_name' => $data['new_student_first_name'],
                     'last_name' => $data['new_student_last_name'],
+                    'username' => str_replace('@gmail.com', '', $data['new_student_email']),
                     'email' => $data['new_student_email'] ?? null,
-                    'password' => bcrypt($tempPassword), // Use a temporary password
+                    'password' => bcrypt($tempPassword), 
                     'role' => 'student',
                 ]);
 
@@ -74,6 +79,7 @@ class CreateLinkChild extends CreateRecord
                     ->title('Student Creation Failed')
                     ->body('An error occurred while creating the new student record. Please try again or contact support.')
                     ->send();
+                Log::error('An error occurred while creating the new student record. Please try again or contact support'. $e->getMessage());
                 $this->halt();
             }
         }

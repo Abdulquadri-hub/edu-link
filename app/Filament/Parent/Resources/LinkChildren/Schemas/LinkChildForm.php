@@ -120,7 +120,8 @@ class LinkChildForm
                             ->hidden(fn (callable $get) => !$get('is_new_student')),
                         
                         TextInput::make('new_student_email')
-                            ->label('Child\'s Email (Optional)')
+                            ->label('Child\'s Email')
+                            ->required(fn (callable $get) => $get('is_new_student'))
                             ->email()
                             ->maxLength(255)
                             ->hidden(fn (callable $get) => !$get('is_new_student')),
