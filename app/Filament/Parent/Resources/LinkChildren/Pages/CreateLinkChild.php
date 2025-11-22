@@ -30,11 +30,11 @@ class CreateLinkChild extends CreateRecord
                     'first_name' => $data['new_student_first_name'],
                     'last_name' => $data['new_student_last_name'],
                     'email' => $data['new_student_email'] ?? null,
-                    'username' => $data['new_student_email'] ? str_replace('@', '_', $data['new_student_email']) : Str::lower(Str::random(10)), // Create a username
+                    'username' => $data['new_student_email'] ? str_replace('@gmail.com', '', $data['new_student_email']) : Str::lower(Str::random(10)), // Create a username
                     'password' => Str::random(10), // Temporary password
                     'date_of_birth' => $data['new_student_dob'],
                     'gender' => 'other', // Default gender to 'other'
-                    'status' => 'pending', // Set user status to pending
+                    // 'status' => 'pending', // Set user status to pending
                     'enrollment_status' => 'pending', // Set student enrollment status to pending
                 ];
 
