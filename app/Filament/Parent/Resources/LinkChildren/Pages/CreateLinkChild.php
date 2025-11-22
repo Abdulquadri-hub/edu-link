@@ -34,11 +34,11 @@ class CreateLinkChild extends CreateRecord
                     'last_name' => $data['new_student_last_name'],
                     'email' => $data['new_student_email'] ?? null,
                     'username' => $data['new_student_email'] ? str_replace('@', '_', $data['new_student_email']) : Str::lower(Str::random(10)), // Create a username
-                    'password' => $tempPassword, // Pass temporary password
-                    'date_of_birth' => $data['new_student_dob'],
-                    'gender' => 'other', // Default gender to 'other'
-                    'status' => 'unverified', // Set user status to unverified for email verification
-                    'email_verified_at' => null, // Ensure email is unverified
+	                    'password' => $tempPassword, // Pass temporary password
+	                    'date_of_birth' => $data['new_student_dob'],
+	                    'gender' => 'other', // Default gender to 'other'
+	                    'status' => 'unverified', // Set user status to unverified for email verification
+	                    'email_verified_at' => null, // Ensure email is unverified
                     'enrollment_status' => 'pending', // Set student enrollment status to pending
                     
                     // New fields from the form
