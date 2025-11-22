@@ -25,7 +25,7 @@ class PaymentVerificationsTable
 {
     public static function configure(Table $table): Table
     {
-       return $table
+      return $table
             ->columns([
                 TextColumn::make('payment_reference')
                     ->label('Reference')
@@ -33,10 +33,18 @@ class PaymentVerificationsTable
                     ->copyable()
                     ->weight('bold'),
                 
-                TextColumn::make('parent.user.full_name')
-                    ->label('Parent')
+                TextColumn::make('uploaded_by')
+                    ->label('Uploaded By')
+                    ->getStateUsing(function ($record) {
+                        if ($record->parent_id) {
+                            return $record->parent->user->full_name . ' (Parent)';
+                        }
+                        return $record->student->user->full_name . ' (Student)';
+                    })
                     ->searchable(['first_name', 'last_name'])
-                    ->description(fn ($record) => $record->parent->user->email),
+                    ->description(fn ($record) => $record->parent_id 
+                        ? $record->parent->user->email 
+                        : $record->student->user->email),
                 
                 TextColumn::make('student.user.full_name')
                     ->label('Student')
@@ -96,13 +104,13 @@ class PaymentVerificationsTable
                     ->query(fn (Builder $query) => $query->whereDoesntHave('subscription')),
             ])
             ->recordActions([
-                Action::make('verify_create_subscription')
+               Action::make('verify_create_subscription')
                     ->label('Verify & Create Subscription')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
                     ->schema([
-                        Select::make('frequency')
+                       Select::make('frequency')
                             ->label('Subscription Frequency')
                             ->options([
                                 '3x_weekly' => '3 times per week',
@@ -112,13 +120,13 @@ class PaymentVerificationsTable
                             ->default('3x_weekly')
                             ->helperText('This determines the number of sessions per week'),
                         
-                        DatePicker::make('start_date')
+                       DatePicker::make('start_date')
                             ->label('Start Date')
                             ->required()
                             ->default(now())
                             ->native(false),
                         
-                        TextInput::make('duration_weeks')
+                       TextInput::make('duration_weeks')
                             ->label('Duration (Weeks)')
                             ->required()
                             ->numeric()
@@ -126,7 +134,7 @@ class PaymentVerificationsTable
                             ->minValue(1)
                             ->helperText('Subscription duration in weeks'),
                         
-                        Textarea::make('admin_notes')
+                       Textarea::make('admin_notes')
                             ->label('Admin Notes (Optional)')
                             ->rows(3),
                     ])
@@ -157,13 +165,13 @@ class PaymentVerificationsTable
                     })
                     ->visible(fn ($record) => $record->status === 'pending'),
                 
-                Action::make('verify_only')
+               Action::make('verify_only')
                     ->label('Verify Only')
                     ->icon('heroicon-o-check')
                     ->color('info')
                     ->requiresConfirmation()
                     ->schema([
-                        Textarea::make('admin_notes')
+                       Textarea::make('admin_notes')
                             ->label('Admin Notes')
                             ->rows(3),
                     ])
@@ -178,13 +186,13 @@ class PaymentVerificationsTable
                     })
                     ->visible(fn ($record) => $record->status === 'pending'),
                 
-                Action::make('reject')
+               Action::make('reject')
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
                     ->schema([
-                        Textarea::make('reason')
+                       Textarea::make('reason')
                             ->label('Reason for Rejection')
                             ->required()
                             ->rows(3)
@@ -201,12 +209,12 @@ class PaymentVerificationsTable
                     })
                     ->visible(fn ($record) => $record->status === 'pending'),
                 
-                Action::make('create_subscription')
+               Action::make('create_subscription')
                     ->label('Create Subscription')
                     ->icon('heroicon-o-document-plus')
                     ->color('warning')
                     ->schema([
-                        Select::make('frequency')
+                       Select::make('frequency')
                             ->label('Subscription Frequency')
                             ->options([
                                 '3x_weekly' => '3 times per week',
@@ -215,13 +223,13 @@ class PaymentVerificationsTable
                             ->required()
                             ->default('3x_weekly'),
                         
-                        DatePicker::make('start_date')
+                       DatePicker::make('start_date')
                             ->label('Start Date')
                             ->required()
                             ->default(now())
                             ->native(false),
                         
-                        TextInput::make('duration_weeks')
+                       TextInput::make('duration_weeks')
                             ->label('Duration (Weeks)')
                             ->required()
                             ->numeric()
@@ -250,7 +258,7 @@ class PaymentVerificationsTable
                     })
                     ->visible(fn ($record) => $record->isVerified() && !$record->hasSubscription()),
                 
-                ViewAction::make(),
+               ViewAction::make(),
             ])
             ->toolbarActions([])
             ->defaultSort('created_at', 'desc');

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\StudentPromotion;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -115,9 +116,6 @@ class Student extends Model
 
     // accessors() and mutators
 
-    public function getAgeAttribute(): int {
-        return $this->date_of_birth->age ?? 0;
-    }
 
     public function getFullAddressAttribute(): string {
         return trim("{$this->address}, {$this->city}, {$this->state}, {$this->country}");
@@ -245,7 +243,7 @@ class Student extends Model
         return $this->hasOne(StudentPromotion::class)->latestOfMany('promotion_date');
     }
 
-    // NEW: Get promotion history
+
     public function getPromotionHistory(): array
     {
         return $this->promotions()
@@ -323,6 +321,111 @@ class Student extends Model
         }
 
         return ['can_promote' => true, 'reason' => null, 'next_level' => $nextLevel];
+    }
+
+    public function getAgeAttribute(): int
+    {
+        return $this->date_of_birth ? $this->date_of_birth->age : 0;
+    }
+
+    // NEW: Check if student is a minor (under 18)
+    public function isMinor(): bool
+    {
+        if (!$this->date_of_birth) {
+            // If no date of birth, assume minor for safety
+            return true;
+        }
+        
+        return $this->age < 18;
+    }
+
+    // NEW: Check if student is an adult (18 or older)
+    public function isAdult(): bool
+    {
+        if (!$this->date_of_birth) {
+            // If no date of birth, assume minor for safety
+            return false;
+        }
+        
+        return $this->age >= 18;
+    }
+
+    // NEW: Check if student has any linked parents
+    public function hasLinkedParent(): bool
+    {
+        return $this->parents()->exists();
+    }
+
+    // NEW: Check if student has verified parent (approved linking request)
+    public function hasVerifiedParent(): bool
+    {
+        return $this->parents()->wherePivot('is_primary_contact', true)->exists() 
+               || $this->parents()->exists();
+    }
+
+    // NEW: Get primary parent (or first parent if no primary)
+    public function getPrimaryParent(): ?ParentModel
+    {
+        $primary = $this->parents()->wherePivot('is_primary_contact', true)->first();
+        
+        if ($primary) {
+            return $primary;
+        }
+        
+        return $this->parents()->first();
+    }
+
+    // NEW: Determine enrollment request routing
+    public function getEnrollmentRequestRoute(): string
+    {
+        // Adult student - they handle payment themselves
+        if ($this->isAdult()) {
+            return 'student_payment';
+        }
+        
+        // Minor with parent - notify parent
+        if ($this->isMinor() && $this->hasLinkedParent()) {
+            return 'parent_payment';
+        }
+        
+        // Minor without parent - needs parent info
+        if ($this->isMinor() && !$this->hasLinkedParent()) {
+            return 'parent_registration';
+        }
+        
+        // Fallback
+        return 'admin_review';
+    }
+
+    // NEW: Can request enrollment check
+    public function canRequestEnrollment(int $courseId): array
+    {
+        // Check if already enrolled
+        if ($this->courses()->where('course_id', $courseId)->exists()) {
+            return ['can_request' => false, 'reason' => 'Already enrolled in this course'];
+        }
+        
+        // Check if pending request exists
+        if ($this->hasPendingRequestFor($courseId)) {
+            return ['can_request' => false, 'reason' => 'Enrollment request already pending'];
+        }
+        
+        // Check if student is active
+        if ($this->enrollment_status !== 'active') {
+            return ['can_request' => false, 'reason' => 'Student account is not active'];
+        }
+        
+        // Get routing info
+        $route = $this->getEnrollmentRequestRoute();
+        
+        return [
+            'can_request' => true,
+            'reason' => null,
+            'route' => $route,
+            'is_adult' => $this->isAdult(),
+            'is_minor' => $this->isMinor(),
+            'has_parent' => $this->hasLinkedParent(),
+        ];
     }
 
 }

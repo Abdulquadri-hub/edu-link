@@ -1,23 +1,25 @@
 <?php
 
-namespace App\Filament\Parent\Resources\Payments\Pages;
+namespace App\Filament\Student\Resources\StudentPayments\Pages;
 
 use App\Models\User;
+use App\Models\EnrollmentRequest;
 use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use App\Notifications\NewPaymentUploadedNotification;
-use App\Filament\Parent\Resources\Payments\PaymentResource;
+use App\Filament\Student\Resources\StudentPayments\StudentPaymentResource;
 
-class CreatePayment extends CreateRecord
+class CreateStudentPayment extends CreateRecord
 {
-    protected static string $resource = PaymentResource::class;
+    protected static string $resource = StudentPaymentResource::class;
 
-    
-    protected function mutateFormDataBeforeCreate(array $data): array
+        protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $parent = Auth::user()->parent;
-        $data['parent_id'] = $parent->id;
+        $student = Auth::user()->student;
+        
+        $data['student_id'] = $student->id;
+        $data['parent_id'] = null; // Student payment, not from parent
         $data['status'] = 'pending';
         
         // Store the original filename
@@ -47,9 +49,22 @@ class CreatePayment extends CreateRecord
             ->duration(5000);
     }
 
-    protected function afterCreate(): void
+   protected function afterCreate(): void
     {
-        $admins = User::where('user_type', 'admin')->get();
+        // Update related enrollment request if exists
+        $student = Auth::user()->student;
+        
+        $enrollmentRequest = EnrollmentRequest::where('student_id', $student->id)
+            ->where('course_id', $this->record->course_id)
+            ->whereIn('status', ['pending', 'payment_pending'])
+            ->first();
+        
+        if ($enrollmentRequest) {
+            $enrollmentRequest->update(['status' => 'payment_pending']);
+        }
+        
+        // Send notification to admin about new payment
+        $admins = \App\Models\User::where('user_type', 'admin')->get();
         
         foreach ($admins as $admin) {
             $admin->notify(new NewPaymentUploadedNotification($this->record));

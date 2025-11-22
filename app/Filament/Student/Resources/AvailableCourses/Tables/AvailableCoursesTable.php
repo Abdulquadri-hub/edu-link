@@ -6,13 +6,17 @@ use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use App\Models\EnrollmentRequest;
-use Filament\Forms\Components\Radio;
 use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\Radio;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Forms\Components\RadioGroup;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Components\TextEntry;
@@ -113,49 +117,118 @@ class AvailableCoursesTable
                     ->icon('heroicon-o-paper-airplane')
                     ->color('success')
                     ->modalHeading('Request Course Enrollment')
-                    ->modalWidth('2xl')
-                    ->schema([
-                        TextEntry::make('course_info')
-                            ->label('Course Information')
-                            ->state(fn ($record) => 
-                                "Course: {$record->title}\n" .
-                                "Code: {$record->course_code}\n" .
-                                "Duration: {$record->duration_weeks} weeks\n" .
-                                "Level: " . ucfirst($record->level)
-                            )
-                            ->columnSpanFull(),
+                    ->modalWidth('3xl')
+                    ->schema(function ($record) {
+                        $student = Auth::user()->student;
+                        $checkResult = $student->canRequestEnrollment($record->id);
+                        $route = $checkResult['route'] ?? 'parent_payment';
                         
-                        Radio::make('frequency_preference')
-                            ->label('Select Frequency')
-                            ->options(fn ($record) => [
-                                '3x_weekly' => '3 times per week - ' . ($record->price_3x_weekly ? '$' . number_format($record->price_3x_weekly, 2) : 'Price not set'),
-                                '5x_weekly' => '5 times per week - ' . ($record->price_5x_weekly ? '$' . number_format($record->price_5x_weekly, 2) : 'Price not set'),
-                            ])
-                            ->required()
-                            ->default('3x_weekly')
-                            ->descriptions([
-                                '3x_weekly' => 'Recommended for beginners',
-                                '5x_weekly' => 'Intensive learning schedule',
-                            ])
-                            ->columnSpanFull(),
+                        // Base form components
+                        $components = [
+                            TextEntry::make('course_info')
+                                ->label('Course Information')
+                                ->state(fn () => 
+                                    "Course: {$record->title}\n" .
+                                    "Code: {$record->course_code}\n" .
+                                    "Duration: {$record->duration_weeks} weeks\n" .
+                                    "Level: " . ucfirst($record->level)
+                                )
+                                ->columnSpanFull(),
+                            
+                            Radio::make('frequency_preference')
+                                ->label('Select Frequency')
+                                ->options([
+                                    '3x_weekly' => '3 times per week - ' . ($record->price_3x_weekly ? '$' . number_format($record->price_3x_weekly, 2) : 'Price not set'),
+                                    '5x_weekly' => '5 times per week - ' . ($record->price_5x_weekly ? '$' . number_format($record->price_5x_weekly, 2) : 'Price not set'),
+                                ])
+                                ->required()
+                                ->default('3x_weekly')
+                                ->descriptions([
+                                    '3x_weekly' => 'Recommended for beginners',
+                                    '5x_weekly' => 'Intensive learning schedule',
+                                ])
+                                ->columnSpanFull(),
+                            
+                            Textarea::make('student_message')
+                                ->label('Why do you want to enroll in this course?')
+                                ->rows(4)
+                                ->placeholder('Tell us about your interest in this course and your learning goals...')
+                                ->helperText('This helps us understand your motivation and goals')
+                                ->columnSpanFull(),
+                        ];
                         
-                        Textarea::make('student_message')
-                            ->label('Why do you want to enroll in this course?')
-                            ->rows(4)
-                            ->placeholder('Tell us about your interest in this course and your learning goals...')
-                            ->helperText('This helps us understand your motivation and goals')
-                            ->columnSpanFull(),
+                        // Add parent registration form if needed
+                        if ($route === 'parent_registration') {
+                            $components[] = Section::make('Parent Information Required')
+                                ->description('Since you are under 18 and don\'t have a parent linked, please provide your parent\'s information. We will create an account for them and send instructions.')
+                                ->schema([
+                                    TextInput::make('parent_first_name')
+                                        ->label('Parent First Name')
+                                        ->required()
+                                        ->maxLength(255),
+                                    
+                                    TextInput::make('parent_last_name')
+                                        ->label('Parent Last Name')
+                                        ->required()
+                                        ->maxLength(255),
+                                    
+                                    TextInput::make('parent_email')
+                                        ->label('Parent Email')
+                                        ->email()
+                                        ->required()
+                                        ->unique('users', 'email', ignoreRecord: true)
+                                        ->helperText('We will send login instructions to this email'),
+                                    
+                                    TextInput::make('parent_phone')
+                                        ->label('Parent Phone')
+                                        ->tel()
+                                        ->maxLength(20),
+                                    
+                                    Select::make('relationship')
+                                        ->label('Relationship')
+                                        ->options([
+                                            'father' => 'Father',
+                                            'mother' => 'Mother',
+                                            'guardian' => 'Legal Guardian',
+                                            'grandparent' => 'Grandparent',
+                                            'other' => 'Other',
+                                        ])
+                                        ->required(),
+                                ])
+                                ->columns(2)
+                                ->columnSpanFull();
+                        }
                         
-                        TextEntry::make('next_steps')
-                            ->label('Next Steps')
-                            ->state('After submitting this request:
+                        // Add appropriate next steps message
+                        $nextStepsContent = match($route) {
+                            'parent_payment' => 'After submitting this request:
                                 1. Your parent(s) will be notified via email
                                 2. They will need to make payment for the course
                                 3. Once payment is verified, you will be enrolled
-                                4. You will receive a confirmation and can start attending classes'
-                            )
-                            ->columnSpanFull(),
-                    ])
+                                4. You will receive a confirmation and can start attending classes',
+                                                            
+                            'student_payment' => 'After submitting this request:
+                                1. You will be able to upload your payment receipt
+                                2. The administration will verify your payment
+                                3. Once verified, you will be enrolled in the course
+                                4. You will receive a confirmation and can start attending classes',
+                            
+                            'parent_registration' => 'After submitting this request:
+                                1. We will create a parent account with the information provided
+                                2. Your parent will receive an email with login instructions
+                                3. They will need to log in, update their password, and upload payment receipt
+                                4. Once payment is verified, you will be enrolled in the course',
+                            
+                            default => 'Your request will be reviewed by administration.',
+                        };
+                        
+                        $components[] = TextEntry::make('next_steps')
+                            ->label('Next Steps')
+                            ->state($nextStepsContent)
+                            ->columnSpanFull();
+                        
+                        return $components;
+                    })
                     ->action(function ($record, array $data) {
                         $student = Auth::user()->student;
                         
@@ -169,15 +242,44 @@ class AvailableCoursesTable
                                 'currency' => 'USD',
                             ]);
                             
-                            // Notify parent
-                            $request->notifyParent();
+                            // Handle based on routing
+                            $route = $student->getEnrollmentRequestRoute();
                             
-                            Notification::make()
-                                ->success()
-                                ->title('Enrollment Request Submitted')
-                                ->body("Your request code is {$request->request_code}. Your parent(s) have been notified.")
-                                ->duration(7000)
-                                ->send();
+                            if ($route === 'parent_registration') {
+                                // Create parent account
+                                $parentInfo = [
+                                    'first_name' => $data['parent_first_name'],
+                                    'last_name' => $data['parent_last_name'],
+                                    'email' => $data['parent_email'],
+                                    'phone' => $data['parent_phone'] ?? null,
+                                    'relationship' => $data['relationship'],
+                                ];
+                                
+                                $registration = $request->createParentAccountFromInfo($parentInfo);
+                                
+                                Notification::make()
+                                    ->success()
+                                    ->title('Enrollment Request Submitted')
+                                    ->body("Request code: {$request->request_code}. A parent account has been created and instructions sent to {$parentInfo['email']}.")
+                                    ->duration(10000)
+                                    ->send();
+                            } else {
+                                // Normal flow - notify parent or student
+                                $request->notifyParent();
+                                
+                                $message = match($route) {
+                                    'parent_payment' => "Your parent(s) have been notified.",
+                                    'student_payment' => "You can now upload your payment receipt.",
+                                    default => "Your request has been submitted for review.",
+                                };
+                                
+                                Notification::make()
+                                    ->success()
+                                    ->title('Enrollment Request Submitted')
+                                    ->body("Your request code is {$request->request_code}. {$message}")
+                                    ->duration(7000)
+                                    ->send();
+                            }
                         } catch (\Exception $e) {
                             Notification::make()
                                 ->danger()

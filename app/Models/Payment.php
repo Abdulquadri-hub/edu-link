@@ -3,11 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
-use App\Events\PaymentRejected;
-use App\Events\PaymentVerified;
-use App\Events\PaymentReceiptUploaded;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Notifications\PaymentRejectedNotification;
+use App\Notifications\PaymentVerifiedNotification;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -51,10 +50,6 @@ class Payment extends Model
             if (empty($payment->payment_reference)) {
                 $payment->payment_reference = self::generatePaymentReference();
             }
-        });
-
-        static::created(function ($payment) {
-            event(new PaymentReceiptUploaded($payment));
         });
     }
 
@@ -129,8 +124,14 @@ class Payment extends Model
             'verified_at' => now(),
         ]);
 
-        // TODO: Send notification to parent
-        event(new PaymentVerified($this));
+        // Send notification to uploader
+        if ($this->parent_id) {
+            // Notify parent
+            $this->parent->user->notify(new PaymentVerifiedNotification($this));
+        } else {
+            // Notify student
+            $this->student->user->notify(new PaymentVerifiedNotification($this));
+        }
 
         return true;
     }
@@ -144,8 +145,14 @@ class Payment extends Model
             'verified_at' => now(),
         ]);
 
-        // TODO: Send notification to parent
-        event(new PaymentRejected($this));
+        // Send notification to uploader
+        if ($this->parent_id) {
+            // Notify parent
+            $this->parent->user->notify(new PaymentRejectedNotification($this));
+        } else {
+            // Notify student
+            $this->student->user->notify(new PaymentRejectedNotification($this));
+        }
     }
 
     public function isPending(): bool
@@ -201,5 +208,33 @@ class Payment extends Model
     public function getFormattedAmountAttribute(): string
     {
         return $this->currency . ' ' . number_format($this->amount, 2);
+    }
+
+    // NEW: Check if payment is from student (not parent)
+    public function isStudentPayment(): bool
+    {
+        return $this->parent_id === null;
+    }
+
+    // NEW: Check if payment is from parent
+    public function isParentPayment(): bool
+    {
+        return $this->parent_id !== null;
+    }
+
+    // NEW: Get uploader name
+    public function getUploaderNameAttribute(): string
+    {
+        if ($this->parent_id) {
+            return $this->parent->user->full_name . ' (Parent)';
+        }
+        
+        return $this->student->user->full_name . ' (Student)';
+    }
+
+    // NEW: Get uploader type
+    public function getUploaderTypeAttribute(): string
+    {
+        return $this->parent_id ? 'Parent' : 'Student';
     }
 }

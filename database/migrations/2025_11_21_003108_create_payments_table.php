@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
-            $table->foreignId('parent_id')->constrained('parents')->onDelete('cascade');
+            $table->foreignId('parent_id')->nullable()->constrained('parents')->onDelete('cascade');
             $table->foreignId('course_id')->nullable()->constrained('courses')->onDelete('set null');
-            $table->string('payment_reference')->unique(); // Generated reference number
+            $table->string('payment_reference')->unique(); 
             $table->decimal('amount', 10, 2);
             $table->string('currency')->default('USD');
             $table->enum('payment_method', ['bank_transfer', 'credit_card', 'cash', 'mobile_money', 'other'])->default('bank_transfer');
-            $table->string('receipt_path')->nullable(); // File storage path
+            $table->string('receipt_path')->nullable(); 
             $table->string('receipt_filename')->nullable();
             $table->text('parent_notes')->nullable();
             $table->enum('status', ['pending', 'verified', 'rejected'])->default('pending');

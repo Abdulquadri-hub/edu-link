@@ -8,7 +8,10 @@ use App\Events\EnrollmentRejected;
 use Illuminate\Database\Eloquent\Model;
 use App\Events\EnrollmentRequestCreated;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Notifications\EnrollmentRequestAdminReview;
+use App\Notifications\EnrollmentRequestStudentPayment;
 
 class EnrollmentRequest extends Model
 {
@@ -50,8 +53,8 @@ class EnrollmentRequest extends Model
             // Set quoted price based on frequency
             if (empty($request->quoted_price) && $request->course) {
                 $request->quoted_price = match($request->frequency_preference) {
-                    '3x_weekly' => $request->course->price_3x_weekly ?? 0,
-                    '5x_weekly' => $request->course->price_5x_weekly ?? 0,
+                    '3x_weekly' => $request->course->price_3x_weekly ?? 80,
+                    '5x_weekly' => $request->course->price_5x_weekly ?? 100,
                     default => 0,
                 };
             }
@@ -78,6 +81,12 @@ class EnrollmentRequest extends Model
     {
         return $this->belongsTo(Enrollment::class);
     }
+
+    public function parentRegistration(): HasOne
+    {
+        return $this->hasOne(ParentRegistration::class);
+    }
+
 
     // Scopes
     public function scopePending($query)
@@ -132,9 +141,38 @@ class EnrollmentRequest extends Model
 
     public function notifyParent(): void
     {
-        $this->update(['status' => 'parent_notified']);
+        $student = $this->student;
         
-        event(new EnrollmentRequestCreated($this));
+        // Check routing
+        $route = $student->getEnrollmentRequestRoute();
+        
+        switch ($route) {
+            case 'parent_payment':
+                // Student has parent - notify them
+                $this->update(['status' => 'parent_notified']);
+                
+                event(new EnrollmentRequestCreated($this));
+                break;
+                
+            case 'student_payment':
+                $this->update(['status' => 'payment_pending']);
+                
+                $student->user->notify(new EnrollmentRequestStudentPayment($this));
+                break;
+                
+            case 'parent_registration':
+                $this->update(['status' => 'pending']);
+                break;
+                
+            default:
+                $this->update(['status' => 'pending']);
+                
+                User::where('user_type', 'admin')->each(function($admin) {
+                    $admin->notify(new EnrollmentRequestAdminReview($this));
+                });
+                break;
+        }
+  
     }
 
     public function markPaymentPending(): void
@@ -187,7 +225,6 @@ class EnrollmentRequest extends Model
             'processed_at' => now(),
         ]);
 
-        // TODO: Send notification to student
         event(new EnrollmentRejected($this));
     }
 
@@ -273,4 +310,50 @@ class EnrollmentRequest extends Model
             default => $this->frequency_preference,
         };
     }
+
+    public function createParentAccountFromInfo(array $parentInfo): ParentRegistration
+    {
+        $tempPassword = ParentRegistration::generateTemporaryPassword();
+        
+        // Create registration record
+        $registration = ParentRegistration::create([
+            'student_id' => $this->student_id,
+            'enrollment_request_id' => $this->id,
+            'parent_first_name' => $parentInfo['first_name'],
+            'parent_last_name' => $parentInfo['last_name'],
+            'parent_email' => $parentInfo['email'],
+            'parent_phone' => $parentInfo['phone'] ?? null,
+            'relationship' => $parentInfo['relationship'],
+            'temporary_password' => $tempPassword,
+            'status' => 'pending',
+        ]);
+        
+        // Create the actual parent account
+        $registration->createParentAccount();
+        
+        // Send welcome email
+        $registration->sendWelcomeEmail();
+        
+        // Update enrollment request status
+        $this->update(['status' => 'parent_notified']);
+        
+        return $registration;
+    }
+
+    // NEW: Check if has parent registration
+    public function hasParentRegistration(): bool
+    {
+        return $this->parentRegistration()->exists();
+    }
+
+    // NEW: Get parent registration status
+    public function getParentRegistrationStatus(): ?string
+    {
+        $registration = $this->parentRegistration;
+        
+        if (!$registration) return null;
+        
+        return $registration->status;
+    }
+
 }

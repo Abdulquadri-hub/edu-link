@@ -25,7 +25,7 @@ class EnrollmentApprovedNotification extends Notification
     public function toArray($notifiable): array
     {
         return FilamentNotification::make()
-            ->title('Enrollment Approved! 🎉')
+            ->title('Enrollment Approved!')
             ->body("You have been enrolled in {$this->enrollmentRequest->course->title}. Welcome to the course!")
             ->success()
             ->icon('heroicon-o-check-badge')
