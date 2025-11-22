@@ -25,33 +25,34 @@ class CreateLinkChild extends CreateRecord
             try {
                 // Instantiate StudentService. Assuming it's bound in the service container.
                 $studentService = app(StudentService::class);
+                
+                $tempPassword = Str::random(10); // Temporary password
 
                 $studentData = [
                     'first_name' => $data['new_student_first_name'],
                     'last_name' => $data['new_student_last_name'],
                     'email' => $data['new_student_email'] ?? null,
                     'username' => $data['new_student_email'] ? str_replace('@', '_', $data['new_student_email']) : Str::lower(Str::random(10)), // Create a username
-                    'password' => Str::random(10), // Temporary password
+                    'password' => $tempPassword, // Pass temporary password
                     'date_of_birth' => $data['new_student_dob'],
                     'gender' => 'other', // Default gender to 'other'
                     'status' => 'pending', // Set user status to pending
                     'enrollment_status' => 'pending', // Set student enrollment status to pending
+                    
+                    // New fields from the form
+                    'phone' => $data['new_student_phone'] ?? 'N/A',
+                    'address' => $data['new_student_address'],
+                    'city' => $data['new_student_city'],
+                    'state' => $data['new_student_state'],
+                    'country' => $data['new_student_country'],
+                    'emergency_contact_name' => $data['new_student_emergency_contact_name'],
+                    'emergency_contact_phone' => $data['new_student_emergency_contact_phone'],
                 ];
 
-                // The createStudent method in StudentService seems to require more fields (phone, city, state, country, emergency contacts)
-                // I will create a simplified method in the service or modify the data to fit the existing method.
-                // Since I cannot modify the service file, I will adapt the data to the existing createStudent method,
-                // providing placeholders for the missing required fields.
-
-                $studentData['phone'] = 'N/A';
-                $studentData['city'] = 'N/A';
-                $studentData['state'] = 'N/A';
-                $studentData['country'] = 'N/A';
-                $studentData['emergency_contact_name'] = 'N/A';
-                $studentData['emergency_contact_phone'] = 'N/A';
-                $studentData['address'] = 'N/A';
-
                 $student = $studentService->createStudent($studentData);
+                
+                // Store temporary password for notification
+                session(['new_student_temp_password' => $tempPassword]);
 
                 // 2. Set the newly created student's ID for the linking request
                 $data['student_id'] = $student->id;
@@ -72,6 +73,13 @@ class CreateLinkChild extends CreateRecord
                 unset($data['new_student_email']);
                 unset($data['new_student_dob']);
                 unset($data['new_student_grade_level']);
+                unset($data['new_student_phone']);
+                unset($data['new_student_address']);
+                unset($data['new_student_city']);
+                unset($data['new_student_state']);
+                unset($data['new_student_country']);
+                unset($data['new_student_emergency_contact_name']);
+                unset($data['new_student_emergency_contact_phone']);
 
             } catch (\Exception $e) {
                 Notification::make()
