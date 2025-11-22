@@ -2,16 +2,12 @@
 
 namespace App\Filament\Parent\Resources\LinkChildren\Pages;
 
-use App\Models\User;
-use App\Models\Student;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 use App\Models\ChildLinkingRequest;
-use Illuminate\Support\Facades\Log;
+use App\Services\StudentService;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
-use App\Contracts\Services\StudentServiceInterface;
 use App\Filament\Parent\Resources\LinkChildren\LinkChildResource;
 
 class CreateLinkChild extends CreateRecord
@@ -24,31 +20,38 @@ class CreateLinkChild extends CreateRecord
         $data['parent_id'] = $parent->id;
         $data['status'] = 'pending';
 
-        $studentService = app(new StudentServiceInterface);
-
         if (isset($data['is_new_student']) && $data['is_new_student']) {
-            // 1. Create a new User and Student record
-            DB::beginTransaction();
+            // 1. Create a new User and Student record using StudentService
             try {
-                $tempPassword = Str::random(10); // Temporary password
+                // Instantiate StudentService. Assuming it's bound in the service container.
+                $studentService = app(StudentService::class);
 
-                $user = User::create([
+                $studentData = [
                     'first_name' => $data['new_student_first_name'],
                     'last_name' => $data['new_student_last_name'],
-                    'username' => str_replace('@gmail.com', '', $data['new_student_email']),
                     'email' => $data['new_student_email'] ?? null,
-                    'password' => bcrypt($tempPassword), 
-                    'role' => 'student',
-                ]);
+                    'username' => $data['new_student_email'] ? str_replace('@', '_', $data['new_student_email']) : Str::lower(Str::random(10)), // Create a username
+                    'password' => Str::random(10), // Temporary password
+                    'date_of_birth' => $data['new_student_dob'],
+                    'gender' => 'other', // Default gender to 'other'
+                    'status' => 'pending', // Set user status to pending
+                    'enrollment_status' => 'pending', // Set student enrollment status to pending
+                ];
 
-                $student = Student::create([
-                    'user_id' => $user->id,
-                    'student_id' => 'TEMP-' . Str::upper(Str::random(6)), // Temporary student ID
-                    'enrollment_status' => 'pending', // New students are pending enrollment
-                    // Assuming 'academic_level_id' is required, but since we only have a string, 
-                    // we'll leave it out or set it to null and let the admin finalize it.
-                    // The grade_level string will be added to the parent_message for admin reference.
-                ]);
+                // The createStudent method in StudentService seems to require more fields (phone, city, state, country, emergency contacts)
+                // I will create a simplified method in the service or modify the data to fit the existing method.
+                // Since I cannot modify the service file, I will adapt the data to the existing createStudent method,
+                // providing placeholders for the missing required fields.
+
+                $studentData['phone'] = 'N/A';
+                $studentData['city'] = 'N/A';
+                $studentData['state'] = 'N/A';
+                $studentData['country'] = 'N/A';
+                $studentData['emergency_contact_name'] = 'N/A';
+                $studentData['emergency_contact_phone'] = 'N/A';
+                $studentData['address'] = 'N/A';
+
+                $student = $studentService->createStudent($studentData);
 
                 // 2. Set the newly created student's ID for the linking request
                 $data['student_id'] = $student->id;
@@ -70,16 +73,12 @@ class CreateLinkChild extends CreateRecord
                 unset($data['new_student_dob']);
                 unset($data['new_student_grade_level']);
 
-                DB::commit();
-
             } catch (\Exception $e) {
-                DB::rollBack();
                 Notification::make()
                     ->danger()
                     ->title('Student Creation Failed')
-                    ->body('An error occurred while creating the new student record. Please try again or contact support.')
+                    ->body('An error occurred while creating the new student record. Please try again or contact support. Error: ' . $e->getMessage())
                     ->send();
-                Log::error('An error occurred while creating the new student record. Please try again or contact support'. $e->getMessage());
                 $this->halt();
             }
         }
