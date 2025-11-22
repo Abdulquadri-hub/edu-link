@@ -21,28 +21,20 @@ class CreateLinkChild extends CreateRecord
         $data['status'] = 'pending';
 
         if (isset($data['is_new_student']) && $data['is_new_student']) {
-            // 1. Create a new User and Student record using StudentService
             try {
-                // Instantiate StudentService. Assuming it's bound in the service container.
                 $studentService = app(StudentService::class);
 
                 $studentData = [
                     'first_name' => $data['new_student_first_name'],
                     'last_name' => $data['new_student_last_name'],
                     'email' => $data['new_student_email'] ?? null,
-                    'username' => $data['new_student_email'] ? str_replace('@gmail.com', '', $data['new_student_email']) : Str::lower(Str::random(10)), // Create a username
-                    'password' => Str::random(10), // Temporary password
+                    'username' => $data['new_student_email'] ? str_replace('@gmail.com', '', $data['new_student_email']) : Str::lower(Str::random(10)), 
+                    'password' => Str::random(10), 
                     'date_of_birth' => $data['new_student_dob'],
-                    'gender' => 'other', // Default gender to 'other'
-                    // 'status' => 'pending', // Set user status to pending
-                    'enrollment_status' => 'pending', // Set student enrollment status to pending
+                    'gender' => 'other', 
+                    'enrollment_status' => 'pending', 
                 ];
-
-                // The createStudent method in StudentService seems to require more fields (phone, city, state, country, emergency contacts)
-                // I will create a simplified method in the service or modify the data to fit the existing method.
-                // Since I cannot modify the service file, I will adapt the data to the existing createStudent method,
-                // providing placeholders for the missing required fields.
-
+                
                 $studentData['phone'] = 'N/A';
                 $studentData['city'] = 'N/A';
                 $studentData['state'] = 'N/A';
