@@ -68,6 +68,6 @@ class VerificationController extends Controller
             'instructor' => WelcomeInstructorMail::class,
         };
 
-        Mail::to($user->user->email)->send(new $emailClass($user));
+        Mail::to($user->email)->send(new $emailClass($user));
     }
 }
