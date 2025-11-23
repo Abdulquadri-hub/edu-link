@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use App\Models\EnrollmentRequest;
 use Filament\Tables\Filters\Filter;
+use Illuminate\Support\Facades\Log;
 use Filament\Forms\Components\Radio;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
@@ -281,6 +282,7 @@ class AvailableCoursesTable
                                     ->send();
                             }
                         } catch (\Exception $e) {
+                            Log::error("There was an error submitting your request".$e->getMessage());
                             Notification::make()
                                 ->danger()
                                 ->title('Request Failed')

@@ -2,12 +2,15 @@
 
 namespace App\Notifications;
 
-use App\Models\EnrollmentRequest;
 use Illuminate\Bus\Queueable;
+use App\Models\EnrollmentRequest;
 use Illuminate\Notifications\Notification;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use App\Filament\Student\Resources\StudentPayments\StudentPaymentResource;
 
-class EnrollmentRequestStudentPayment extends Notification
+
+class EnrollmentRequestStudentPayment extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -27,11 +30,11 @@ class EnrollmentRequestStudentPayment extends Notification
     {
         $course = $this->enrollmentRequest->course;
         $price = $this->enrollmentRequest->formattedPrice;
-        $paymentsUrl = route('filament.student.resources.payments.create');
+        $paymentsUrl = StudentPaymentResource::getUrl('create', panel: 'student');
 
         return (new MailMessage)
             ->subject('Action Required: Payment for Your Course Enrollment')
-            ->greeting("Hello {$notifiable->user->first_name}!")
+            ->greeting("Hello {$notifiable->student->user->first_name}!")
             ->line("You have a pending enrollment request for the course **{$course->title}**. To complete your enrollment, please submit the required payment.")
             ->line('')
             ->line('**Enrollment Details:**')
@@ -50,7 +53,7 @@ class EnrollmentRequestStudentPayment extends Notification
     public function toDatabase($notifiable): array
     {
         $course = $this->enrollmentRequest->course;
-        $paymentsUrl = route('filament.student.resources.payments.create');
+        $paymentsUrl = StudentPaymentResource::getUrl('create', panel: 'student');
 
         return \Filament\Notifications\Notification::make()
             ->title('Enrollment Payment Required')

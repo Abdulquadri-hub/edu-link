@@ -168,7 +168,7 @@ class EnrollmentRequest extends Model
                 $this->update(['status' => 'pending']);
                 
                 User::where('user_type', 'admin')->each(function($admin) {
-                    $admin->notify(new EnrollmentRequestAdminReview($this));
+                    // $admin->notify(new EnrollmentRequestAdminReview($this));
                 });
                 break;
         }

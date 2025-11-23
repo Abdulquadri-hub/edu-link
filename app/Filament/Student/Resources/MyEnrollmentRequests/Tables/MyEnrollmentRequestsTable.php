@@ -16,7 +16,7 @@ class MyEnrollmentRequestsTable
 {
     public static function configure(Table $table): Table
     {
-                return $table
+        return $table
             ->columns([
                 \Filament\Tables\Columns\TextColumn::make('request_code')
                     ->label('Request Code')

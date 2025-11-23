@@ -6,8 +6,9 @@ use App\Models\EnrollmentRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class EnrollmentRequestAdminReview extends Notification
+class EnrollmentRequestAdminReview extends Notification implements ShouldQueue
 {
     use Queueable;
 
